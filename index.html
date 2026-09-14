@@ -9,7 +9,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; padding: 14px; color: #1a1a1a; }
     
-    /* 상단 네비게이션 탭 */
     .tab-bar { display: flex; gap: 8px; margin-bottom: 14px; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; background: #e4e7eb; color: #495057; cursor: pointer; }
     .tab-btn.active { background: #800020; color: #fff; }
@@ -17,7 +16,6 @@
     .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px 14px; font-size: 15px; font-weight: 700; color: #333; }
     .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
     
-    /* 와인 카드 (아코디언) */
     .wine-card { background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
     .wine-summary { padding: 15px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .wine-summary:active { background: #f8f9fa; }
@@ -25,7 +23,10 @@
     .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 4px; }
     .wine-sub-text { font-size: 12px; color: #6c757d; }
     
-    .wine-badge-box { display: flex; align-items: center; gap: 8px; }
+    .wine-badge-box { display: flex; align-items: center; gap: 6px; }
+    .badge-status { font-size: 11px; padding: 3px 6px; border-radius: 4px; font-weight: 600; }
+    .badge-tasted { background: #e7f5ff; color: #1971c2; }
+    .badge-stored { background: #ebfbee; color: #2b8a3e; }
     .badge-vintage { background: #800020; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; }
     .arrow { font-size: 12px; color: #adb5bd; transition: transform 0.2s ease; }
     .wine-card.active .arrow { transform: rotate(180deg); color: #800020; }
@@ -40,13 +41,26 @@
     .spec-table td.v { color: #212529; }
 
     .score-chip { display: inline-block; background: #fff3bf; color: #d9480f; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 12px; margin-right: 4px; margin-bottom: 3px; }
-    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-top: 6px; }
+    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-top: 6px; margin-bottom: 12px; }
     .note-label { font-size: 12px; font-weight: 700; color: #495057; margin-bottom: 6px; }
     .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
     .tag { background: #e7f5ff; color: #1971c2; font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
 
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
+
+    /* 개별 관리 폼 UI */
+    .manage-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 14px; margin-top: 10px; }
+    .manage-title { font-size: 13px; font-weight: 700; color: #800020; margin-bottom: 10px; }
+    .input-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+    .input-row label { font-size: 12px; font-weight: 600; color: #495057; }
+    .input-row input, .input-row textarea { width: 100%; padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; font-family: inherit; }
+    .input-row textarea { resize: vertical; min-height: 55px; }
+    .toggle-row { display: flex; gap: 16px; margin: 10px 0; }
+    .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; }
+    .toggle-label input { width: 16px; height: 16px; accent-color: #800020; }
+    .save-btn { width: 100%; background: #495057; color: #fff; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .save-btn:active { background: #212529; }
 
     /* 라벨 등록 뷰 */
     #tabUploadSection { display: none; background: #fff; padding: 22px 18px; border-radius: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
@@ -64,13 +78,11 @@
 </head>
 <body>
 
-  <!-- 상단 네비게이션 탭 -->
   <div class="tab-bar">
     <button class="tab-btn active" id="btnList" onclick="switchView('list')">🍷 와인 컬렉션</button>
     <button class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 라벨 등록</button>
   </div>
 
-  <!-- 1. 컬렉션 뷰 -->
   <div id="tabListSection">
     <div class="header-bar">
       <span id="countText">🍷 컬렉션 조회 중...</span>
@@ -81,7 +93,6 @@
     </div>
   </div>
 
-  <!-- 2. 직접 등록 뷰 -->
   <div id="tabUploadSection">
     <h3 style="margin-bottom: 6px; font-size: 18px;">와인 라벨 추가</h3>
     <p style="font-size: 13px; color: #6c757d; margin-bottom: 14px;">라벨 사진을 촬영하거나 선택하면 AI가 분석하여 Supabase DB에 직접 등록합니다.</p>
@@ -99,9 +110,7 @@
 
   <script>
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
-    // Supabase Project Settings > API > anon public key
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0"; 
-    // Google AI Studio API Key (GEMINI_API_KEY)
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
     const GEMINI_API_KEY = "AQ.Ab8RN6Iy1CDncxP4TmQsoIStUXCsAwtVC7Op0Fy_NcAYdrL_NQ";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -131,6 +140,41 @@
       if (n < 0) n = 0;
       if (n > 5) n = 5;
       return "●".repeat(n) + "○".repeat(5 - n);
+    }
+
+    async function saveWineDetails(id, btn) {
+      const card = btn.closest('.wine-card');
+      const price = card.querySelector('.input-price').value.trim();
+      const loc = card.querySelector('.input-loc').value.trim();
+      const memo = card.querySelector('.input-memo').value.trim();
+      const isStored = card.querySelector('.check-stored').checked;
+      const isTasted = card.querySelector('.check-tasted').checked;
+
+      btn.disabled = true;
+      btn.innerText = '저장 중...';
+
+      try {
+        const { error } = await sb.from('wines').update({
+          purchase_price: price,
+          purchase_location: loc,
+          memo: memo,
+          is_stored: isStored,
+          is_tasted: isTasted
+        }).eq('id', id);
+
+        if (error) throw error;
+        btn.innerText = '✅ 저장 완료';
+        btn.style.background = '#2b8a3e';
+        setTimeout(() => {
+          btn.innerText = '저장하기';
+          btn.style.background = '#495057';
+          btn.disabled = false;
+        }, 1500);
+      } catch (e) {
+        alert('저장 실패: ' + e.message);
+        btn.innerText = '저장하기';
+        btn.disabled = false;
+      }
     }
 
     async function fetchWines() {
@@ -186,6 +230,8 @@
           }
 
           let vintageStr = w.vintage ? w.vintage : 'NV';
+          let storedBadge = w.is_stored ? '<span class="badge-status badge-stored">보관중</span>' : '';
+          let tastedBadge = w.is_tasted ? '<span class="badge-status badge-tasted">시음완료</span>' : '';
 
           html += `
             <div class="wine-card" onclick="toggleCard(this)">
@@ -195,6 +241,8 @@
                   <div class="wine-sub-text">${w.producer || w.country || ''}</div>
                 </div>
                 <div class="wine-badge-box">
+                  ${storedBadge}
+                  ${tastedBadge}
                   <span class="badge-vintage">${vintageStr}</span>
                   <span class="arrow">▼</span>
                 </div>
@@ -218,6 +266,27 @@
                   <div class="gauge-item"><span>타닌 (Tannin)</span><span class="gauge-dots">${makeDots(notes.tannin)}</span></div>
                   <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
                 </div>
+
+                <div class="manage-box">
+                  <div class="manage-title">📝 내 보관 & 메모 관리</div>
+                  <div class="input-row">
+                    <label>구매 가격 (또는 '선물')</label>
+                    <input type="text" class="input-price" value="${w.purchase_price || ''}" placeholder="예: 150,000원 또는 선물">
+                  </div>
+                  <div class="input-row">
+                    <label>구매처</label>
+                    <input type="text" class="input-loc" value="${w.purchase_location || ''}" placeholder="예: 해외 직구, 이마트 등">
+                  </div>
+                  <div class="toggle-row">
+                    <label class="toggle-label"><input type="checkbox" class="check-stored" ${w.is_stored !== false ? 'checked' : ''}> 현재 보관 중</label>
+                    <label class="toggle-label"><input type="checkbox" class="check-tasted" ${w.is_tasted ? 'checked' : ''}> 시음 완료</label>
+                  </div>
+                  <div class="input-row">
+                    <label>메모</label>
+                    <textarea class="input-memo" placeholder="구입 배경, 보관 장소, 시음 소감 등">${w.memo || ''}</textarea>
+                  </div>
+                  <button type="button" class="save-btn" onclick="saveWineDetails('${w.id}', this)">저장하기</button>
+                </div>
               </div>
             </div>
           `;
@@ -229,7 +298,6 @@
       }
     }
 
-    // 사진 관리
     document.getElementById('fileIn').addEventListener('change', e => handleFiles(e.target.files));
     document.getElementById('camIn').addEventListener('change', e => handleFiles(e.target.files));
 
@@ -265,7 +333,6 @@
       renderThumbs();
     }
 
-    // 이미지 리사이즈 (브라우저 Canvas로 압축)
     function resizeImage(file) {
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -294,7 +361,6 @@
       });
     }
 
-    // Gemini API 호출 및 Supabase 자동 INSERT
     async function analyzeAndSave() {
       if (selectedFiles.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -349,7 +415,6 @@
           rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(rawText);
 
-          // Supabase DB에 직접 자동 INSERT
           const dbRecord = {
             ...parsed,
             is_stored: true,
