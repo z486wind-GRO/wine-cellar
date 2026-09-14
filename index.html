@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>🍷 와인 컬렉션</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; padding: 14px; color: #1a1a1a; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px 14px; font-size: 15px; font-weight: 700; color: #333; }
+    .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    
+    .wine-card { background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
+    .wine-summary { padding: 15px 16px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+    .wine-summary:active { background: #f8f9fa; }
+    .wine-name-box { flex: 1; padding-right: 12px; }
+    .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 4px; }
+    .wine-sub-text { font-size: 12px; color: #6c757d; }
+    
+    .wine-badge-box { display: flex; align-items: center; gap: 8px; }
+    .badge-vintage { background: #800020; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+    .arrow { font-size: 12px; color: #adb5bd; transition: transform 0.2s ease; }
+    .wine-card.active .arrow { transform: rotate(180deg); color: #800020; }
+
+    .wine-body { display: none; padding: 14px 16px 16px; background: #fafbfc; border-top: 1px solid #f1f3f5; }
+    .wine-card.active .wine-body { display: block; }
+    
+    .wine-en-title { font-size: 12px; color: #6c757d; font-style: italic; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
+    .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
+    .spec-table td { padding: 5px 0; vertical-align: top; }
+    .spec-table td.k { color: #868e96; width: 85px; font-weight: 600; }
+    .spec-table td.v { color: #212529; }
+
+    .score-chip { display: inline-block; background: #fff3bf; color: #d9480f; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 12px; margin-right: 4px; margin-bottom: 3px; }
+    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-top: 6px; }
+    .note-label { font-size: 12px; font-weight: 700; color: #495057; margin-bottom: 6px; }
+    .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+    .tag { background: #e7f5ff; color: #1971c2; font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+
+    .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
+    .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
+  </style>
+</head>
+<body>
+
+  <div class="header-bar">
+    <span id="countText">🍷 와인 컬렉션 불러오는 중...</span>
+    <button class="reload-btn" onclick="fetchWines()">새로고침</button>
+  </div>
+
+  <div id="winesContainer">
+    <p style="text-align: center; color: #868e96; padding: 40px;">데이터를 조회하고 있습니다...</p>
+  </div>
+
+  <script>
+    const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_Mqj_UKJO-YXhwJAENAvzdw_2ZuK5Z4a";
+    const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    function toggleCard(card) {
+      card.classList.toggle('active');
+    }
+
+    function makeDots(val) {
+      let n = parseInt(val) || 0;
+      if (n < 0) n = 0;
+      if (n > 5) n = 5;
+      return "●".repeat(n) + "○".repeat(5 - n);
+    }
+
+    async function fetchWines() {
+      const container = document.getElementById('winesContainer');
+      const countText = document.getElementById('countText');
+      container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">목록을 불러오는 중...</p>';
+
+      try {
+        const { data: wines, error } = await sb
+          .from('wines')
+          .select('*')
+          .order('name_ko', { ascending: true });
+
+        if (error) throw error;
+
+        countText.innerText = `보관 중인 와인 (${wines.length}병)`;
+
+        if (!wines || wines.length === 0) {
+          container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">보관된 와인이 없습니다.</p>';
+          return;
+        }
+
+        let html = '';
+        wines.forEach(w => {
+          let notes = w.tasting_notes || {};
+          if (typeof notes === 'string') {
+            try { notes = JSON.parse(notes); } catch(e) { notes = {}; }
+          }
+          let scores = w.expert_scores || {};
+          if (typeof scores === 'string') {
+            try { scores = JSON.parse(scores); } catch(e) { scores = {}; }
+          }
+
+          let scoreChips = '';
+          for (let k in scores) {
+            scoreChips += `<span class="score-chip">${k} ${scores[k]}</span>`;
+          }
+          if (!scoreChips) scoreChips = '<span style="color:#adb5bd;">점수 없음</span>';
+
+          let aromaHtml = '';
+          let aromas = notes.aroma || [];
+          if (Array.isArray(aromas) && aromas.length > 0) {
+            aromas.forEach(a => { aromaHtml += `<span class="tag">#${a}</span>`; });
+          } else {
+            aromaHtml = '<span style="color:#adb5bd; font-size:12px;">아로마 데이터 없음</span>';
+          }
+
+          let varieties = '-';
+          if (Array.isArray(w.grape_varieties)) {
+            varieties = w.grape_varieties.join(', ');
+          } else if (w.grape_varieties) {
+            varieties = w.grape_varieties;
+          }
+
+          let vintageStr = w.vintage ? w.vintage : 'NV';
+
+          html += `
+            <div class="wine-card" onclick="toggleCard(this)">
+              <div class="wine-summary">
+                <div class="wine-name-box">
+                  <div class="wine-name">${w.name_ko || '미확인 와인'}</div>
+                  <div class="wine-sub-text">${w.producer || w.country || ''}</div>
+                </div>
+                <div class="wine-badge-box">
+                  <span class="badge-vintage">${vintageStr}</span>
+                  <span class="arrow">▼</span>
+                </div>
+              </div>
+
+              <div class="wine-body" onclick="event.stopPropagation()">
+                <div class="wine-en-title">${w.name_en || ''}</div>
+                <table class="spec-table">
+                  <tr><td class="k">📍 생산지</td><td class="v">${w.country || '-'} ❯ ${w.region || '-'}</td></tr>
+                  <tr><td class="k">🍇 품종</td><td class="v">${varieties}</td></tr>
+                  <tr><td class="k">⭐ 평점</td><td class="v">${scoreChips}</td></tr>
+                  <tr><td class="k">🏆 추천빈티지</td><td class="v">${w.best_vintages || '-'}</td></tr>
+                  <tr><td class="k">⏳ 시음적기</td><td class="v"><b>${w.drinking_window_start || '?'}년 ~ ${w.drinking_window_end || '?'}년</b></td></tr>
+                </table>
+
+                <div class="note-box">
+                  <div class="note-label">👃 대표 아로마</div>
+                  <div class="aroma-tags">${aromaHtml}</div>
+                  <div class="note-label">👅 맛 & 구조감</div>
+                  <div class="gauge-item"><span>바디감 (Body)</span><span class="gauge-dots">${makeDots(notes.body)}</span></div>
+                  <div class="gauge-item"><span>타닌 (Tannin)</span><span class="gauge-dots">${makeDots(notes.tannin)}</span></div>
+                  <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = '<p style="text-align: center; color: #fa5252; padding: 40px;">목록을 불러오지 못했습니다.<br>' + err.message + '</p>';
+      }
+    }
+
+    window.onload = fetchWines;
+  </script>
+</body>
+</html>
