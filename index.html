@@ -27,6 +27,7 @@
     .badge-status { font-size: 11px; padding: 3px 6px; border-radius: 4px; font-weight: 600; }
     .badge-tasted { background: #e7f5ff; color: #1971c2; }
     .badge-stored { background: #ebfbee; color: #2b8a3e; }
+    .badge-out { background: #f1f3f5; color: #868e96; }
     .badge-vintage { background: #800020; color: #fff; padding: 4px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; }
     .arrow { font-size: 12px; color: #adb5bd; transition: transform 0.2s ease; }
     .wine-card.active .arrow { transform: rotate(180deg); color: #800020; }
@@ -49,8 +50,16 @@
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
 
-    /* 개별 관리 폼 UI */
-    .manage-box { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 14px; margin-top: 10px; }
+    /* 개인 기록 뷰 모드 */
+    .user-info-view { background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 12px 14px; margin-top: 8px; }
+    .user-info-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .user-info-title { font-size: 13px; font-weight: 700; color: #800020; }
+    .edit-toggle-btn { background: #e9ecef; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; color: #495057; cursor: pointer; }
+    .user-info-item { font-size: 13px; margin-bottom: 5px; color: #333; line-height: 1.4; }
+    .user-info-item span.k { color: #868e96; display: inline-block; width: 75px; font-weight: 600; }
+
+    /* 개인 기록 편집 모드 (기본 숨김) */
+    .manage-box { display: none; background: #fff; border: 1px solid #ced4da; border-radius: 10px; padding: 14px; margin-top: 8px; }
     .manage-title { font-size: 13px; font-weight: 700; color: #800020; margin-bottom: 10px; }
     .input-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
     .input-row label { font-size: 12px; font-weight: 600; color: #495057; }
@@ -59,8 +68,9 @@
     .toggle-row { display: flex; gap: 16px; margin: 10px 0; }
     .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; }
     .toggle-label input { width: 16px; height: 16px; accent-color: #800020; }
-    .save-btn { width: 100%; background: #495057; color: #fff; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .save-btn:active { background: #212529; }
+    .edit-btn-group { display: flex; gap: 8px; margin-top: 10px; }
+    .save-btn { flex: 2; background: #800020; color: #fff; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .cancel-btn { flex: 1; background: #e9ecef; color: #495057; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
     /* 라벨 등록 뷰 */
     #tabUploadSection { display: none; background: #fff; padding: 22px 18px; border-radius: 14px; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
@@ -135,6 +145,18 @@
       card.classList.toggle('active');
     }
 
+    function toggleEdit(id) {
+      const viewEl = document.getElementById(`view-${id}`);
+      const editEl = document.getElementById(`edit-${id}`);
+      if (editEl.style.display === 'block') {
+        editEl.style.display = 'none';
+        viewEl.style.display = 'block';
+      } else {
+        editEl.style.display = 'block';
+        viewEl.style.display = 'none';
+      }
+    }
+
     function makeDots(val) {
       let n = parseInt(val) || 0;
       if (n < 0) n = 0;
@@ -143,12 +165,12 @@
     }
 
     async function saveWineDetails(id, btn) {
-      const card = btn.closest('.wine-card');
-      const price = card.querySelector('.input-price').value.trim();
-      const loc = card.querySelector('.input-loc').value.trim();
-      const memo = card.querySelector('.input-memo').value.trim();
-      const isStored = card.querySelector('.check-stored').checked;
-      const isTasted = card.querySelector('.check-tasted').checked;
+      const editEl = document.getElementById(`edit-${id}`);
+      const price = editEl.querySelector('.input-price').value.trim();
+      const loc = editEl.querySelector('.input-loc').value.trim();
+      const memo = editEl.querySelector('.input-memo').value.trim();
+      const isStored = editEl.querySelector('.check-stored').checked;
+      const isTasted = editEl.querySelector('.check-tasted').checked;
 
       btn.disabled = true;
       btn.innerText = '저장 중...';
@@ -163,16 +185,12 @@
         }).eq('id', id);
 
         if (error) throw error;
-        btn.innerText = '✅ 저장 완료';
-        btn.style.background = '#2b8a3e';
-        setTimeout(() => {
-          btn.innerText = '저장하기';
-          btn.style.background = '#495057';
-          btn.disabled = false;
-        }, 1500);
+        
+        // 새로고침하여 즉시 반영
+        fetchWines();
       } catch (e) {
         alert('저장 실패: ' + e.message);
-        btn.innerText = '저장하기';
+        btn.innerText = '저장';
         btn.disabled = false;
       }
     }
@@ -230,7 +248,7 @@
           }
 
           let vintageStr = w.vintage ? w.vintage : 'NV';
-          let storedBadge = w.is_stored ? '<span class="badge-status badge-stored">보관중</span>' : '';
+          let storedBadge = w.is_stored !== false ? '<span class="badge-status badge-stored">보관중</span>' : '<span class="badge-status badge-out">미보관</span>';
           let tastedBadge = w.is_tasted ? '<span class="badge-status badge-tasted">시음완료</span>' : '';
 
           html += `
@@ -267,8 +285,21 @@
                   <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
                 </div>
 
-                <div class="manage-box">
-                  <div class="manage-title">📝 내 보관 & 메모 관리</div>
+                <!-- 1. 조회 모드: 평소에는 깔끔한 텍스트로 보임 -->
+                <div class="user-info-view" id="view-${w.id}">
+                  <div class="user-info-header">
+                    <span class="user-info-title">📋 내 보관 & 기록</span>
+                    <button type="button" class="edit-toggle-btn" onclick="toggleEdit('${w.id}')">✏️ Edit</button>
+                  </div>
+                  <div class="user-info-item"><span class="k">구매가격</span> ${w.purchase_price ? w.purchase_price : '<span style="color:#adb5bd;">미입력</span>'}</div>
+                  <div class="user-info-item"><span class="k">구매처</span> ${w.purchase_location ? w.purchase_location : '<span style="color:#adb5bd;">미입력</span>'}</div>
+                  <div class="user-info-item"><span class="k">보관상태</span> ${w.is_stored !== false ? '현재 셀러 보관 중' : '보관 안 함'} / ${w.is_tasted ? '시음 완료' : '미시음'}</div>
+                  <div class="user-info-item"><span class="k">메모</span> ${w.memo ? w.memo : '<span style="color:#adb5bd;">작성된 메모가 없습니다.</span>'}</div>
+                </div>
+
+                <!-- 2. 수정 모드: Edit 버튼을 눌렀을 때만 나타남 -->
+                <div class="manage-box" id="edit-${w.id}">
+                  <div class="manage-title">✏️ 기록 수정하기</div>
                   <div class="input-row">
                     <label>구매 가격 (또는 '선물')</label>
                     <input type="text" class="input-price" value="${w.purchase_price || ''}" placeholder="예: 150,000원 또는 선물">
@@ -285,8 +316,12 @@
                     <label>메모</label>
                     <textarea class="input-memo" placeholder="구입 배경, 보관 장소, 시음 소감 등">${w.memo || ''}</textarea>
                   </div>
-                  <button type="button" class="save-btn" onclick="saveWineDetails('${w.id}', this)">저장하기</button>
+                  <div class="edit-btn-group">
+                    <button type="button" class="save-btn" onclick="saveWineDetails('${w.id}', this)">저장</button>
+                    <button type="button" class="cancel-btn" onclick="toggleEdit('${w.id}')">취소</button>
+                  </div>
                 </div>
+
               </div>
             </div>
           `;
