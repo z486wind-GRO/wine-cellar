@@ -58,7 +58,7 @@
     .user-info-item { font-size: 13px; margin-bottom: 5px; color: #333; line-height: 1.4; }
     .user-info-item span.k { color: #868e96; display: inline-block; width: 75px; font-weight: 600; }
 
-    /* 개인 기록 편집 모드 (기본 숨김) */
+    /* 개인 기록 편집 모드 */
     .manage-box { display: none; background: #fff; border: 1px solid #ced4da; border-radius: 10px; padding: 14px; margin-top: 8px; }
     .manage-title { font-size: 13px; font-weight: 700; color: #800020; margin-bottom: 10px; }
     .input-row { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
@@ -69,7 +69,10 @@
     .toggle-label { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #333; cursor: pointer; }
     .toggle-label input { width: 16px; height: 16px; accent-color: #800020; }
     .edit-btn-group { display: flex; gap: 8px; margin-top: 10px; }
-    .save-btn { flex: 2; background: #800020; color: #fff; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    
+    /* 저장 버튼: 비활성화 상태(회색) / 활성화 상태(와인색) */
+    .save-btn { flex: 2; background: #ced4da; color: #fff; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: not-allowed; transition: background 0.2s; }
+    .save-btn.active { background: #800020; cursor: pointer; }
     .cancel-btn { flex: 1; background: #e9ecef; color: #495057; border: none; padding: 9px; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; }
 
     /* 라벨 등록 뷰 */
@@ -152,8 +155,55 @@
         editEl.style.display = 'none';
         viewEl.style.display = 'block';
       } else {
+        // 편집 열 때 초기 원본값 저장 및 버튼 비활성화 세팅
         editEl.style.display = 'block';
         viewEl.style.display = 'none';
+        initEditState(id);
+      }
+    }
+
+    function initEditState(id) {
+      const editEl = document.getElementById(`edit-${id}`);
+      const price = editEl.querySelector('.input-price');
+      const loc = editEl.querySelector('.input-loc');
+      const memo = editEl.querySelector('.input-memo');
+      const isStored = editEl.querySelector('.check-stored');
+      const isTasted = editEl.querySelector('.check-tasted');
+      const saveBtn = editEl.querySelector('.save-btn');
+
+      editEl.dataset.origPrice = price.value.trim();
+      editEl.dataset.origLoc = loc.value.trim();
+      editEl.dataset.origMemo = memo.value.trim();
+      editEl.dataset.origStored = isStored.checked ? "1" : "0";
+      editEl.dataset.origTasted = isTasted.checked ? "1" : "0";
+
+      saveBtn.disabled = true;
+      saveBtn.classList.remove('active');
+    }
+
+    function checkChanges(id) {
+      const editEl = document.getElementById(`edit-${id}`);
+      const price = editEl.querySelector('.input-price').value.trim();
+      const loc = editEl.querySelector('.input-loc').value.trim();
+      const memo = editEl.querySelector('.input-memo').value.trim();
+      const isStored = editEl.querySelector('.check-stored').checked ? "1" : "0";
+      const isTasted = editEl.querySelector('.check-tasted').checked ? "1" : "0";
+      const saveBtn = editEl.querySelector('.save-btn');
+
+      const isChanged = (
+        price !== editEl.dataset.origPrice ||
+        loc !== editEl.dataset.origLoc ||
+        memo !== editEl.dataset.origMemo ||
+        isStored !== editEl.dataset.origStored ||
+        isTasted !== editEl.dataset.origTasted
+      );
+
+      if (isChanged) {
+        saveBtn.disabled = false;
+        saveBtn.classList.add('active');
+      } else {
+        saveBtn.disabled = true;
+        saveBtn.classList.remove('active');
       }
     }
 
@@ -165,6 +215,7 @@
     }
 
     async function saveWineDetails(id, btn) {
+      if (btn.disabled) return;
       const editEl = document.getElementById(`edit-${id}`);
       const price = editEl.querySelector('.input-price').value.trim();
       const loc = editEl.querySelector('.input-loc').value.trim();
@@ -173,6 +224,7 @@
       const isTasted = editEl.querySelector('.check-tasted').checked;
 
       btn.disabled = true;
+      btn.classList.remove('active');
       btn.innerText = '저장 중...';
 
       try {
@@ -186,12 +238,12 @@
 
         if (error) throw error;
         
-        // 새로고침하여 즉시 반영
         fetchWines();
       } catch (e) {
         alert('저장 실패: ' + e.message);
         btn.innerText = '저장';
         btn.disabled = false;
+        btn.classList.add('active');
       }
     }
 
@@ -285,7 +337,6 @@
                   <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
                 </div>
 
-                <!-- 1. 조회 모드: 평소에는 깔끔한 텍스트로 보임 -->
                 <div class="user-info-view" id="view-${w.id}">
                   <div class="user-info-header">
                     <span class="user-info-title">📋 내 보관 & 기록</span>
@@ -297,24 +348,23 @@
                   <div class="user-info-item"><span class="k">메모</span> ${w.memo ? w.memo : '<span style="color:#adb5bd;">작성된 메모가 없습니다.</span>'}</div>
                 </div>
 
-                <!-- 2. 수정 모드: Edit 버튼을 눌렀을 때만 나타남 -->
                 <div class="manage-box" id="edit-${w.id}">
                   <div class="manage-title">✏️ 기록 수정하기</div>
                   <div class="input-row">
                     <label>구매 가격 (또는 '선물')</label>
-                    <input type="text" class="input-price" value="${w.purchase_price || ''}" placeholder="예: 150,000원 또는 선물">
+                    <input type="text" class="input-price" value="${w.purchase_price || ''}" placeholder="예: 150,000원 또는 선물" oninput="checkChanges('${w.id}')">
                   </div>
                   <div class="input-row">
                     <label>구매처</label>
-                    <input type="text" class="input-loc" value="${w.purchase_location || ''}" placeholder="예: 해외 직구, 이마트 등">
+                    <input type="text" class="input-loc" value="${w.purchase_location || ''}" placeholder="예: 해외 직구, 이마트 등" oninput="checkChanges('${w.id}')">
                   </div>
                   <div class="toggle-row">
-                    <label class="toggle-label"><input type="checkbox" class="check-stored" ${w.is_stored !== false ? 'checked' : ''}> 현재 보관 중</label>
-                    <label class="toggle-label"><input type="checkbox" class="check-tasted" ${w.is_tasted ? 'checked' : ''}> 시음 완료</label>
+                    <label class="toggle-label"><input type="checkbox" class="check-stored" ${w.is_stored !== false ? 'checked' : ''} onchange="checkChanges('${w.id}')"> 현재 보관 중</label>
+                    <label class="toggle-label"><input type="checkbox" class="check-tasted" ${w.is_tasted ? 'checked' : ''} onchange="checkChanges('${w.id}')"> 시음 완료</label>
                   </div>
                   <div class="input-row">
                     <label>메모</label>
-                    <textarea class="input-memo" placeholder="구입 배경, 보관 장소, 시음 소감 등">${w.memo || ''}</textarea>
+                    <textarea class="input-memo" placeholder="구입 배경, 보관 장소, 시음 소감 등" oninput="checkChanges('${w.id}')">${w.memo || ''}</textarea>
                   </div>
                   <div class="edit-btn-group">
                     <button type="button" class="save-btn" onclick="saveWineDetails('${w.id}', this)">저장</button>
