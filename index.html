@@ -61,26 +61,36 @@
     .spec-table td.k { color: #868e96; width: 85px; font-weight: 600; }
     .spec-table td.v { color: #212529; }
 
-    /* 사용자 입력 관리 영역 (구매정보 & 비고) */
-    .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-    .panel-title { font-size: 13px; font-weight: 700; color: #800020; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
-    .info-input-group { display: flex; flex-direction: column; gap: 8px; }
-    .info-input-row { display: flex; gap: 8px; }
-    .info-field { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-    .info-field label { font-size: 11px; font-weight: 700; color: #6c757d; }
-    .info-field input, .info-field textarea { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; background: #fafbfc; }
-    .info-field input:focus, .info-field textarea:focus { border-color: #800020; background: #fff; }
-    .btn-save-info { background: #800020; color: #fff; border: none; padding: 8px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; align-self: flex-end; margin-top: 4px; }
-    .btn-save-info:active { background: #5c0017; }
-
     .score-chip { display: inline-block; background: #fff3bf; color: #d9480f; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 12px; margin-right: 4px; margin-bottom: 3px; }
-    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-top: 6px; margin-bottom: 14px; }
+    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-top: 6px; margin-bottom: 12px; }
     .note-label { font-size: 12px; font-weight: 700; color: #495057; margin-bottom: 6px; }
     .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
     .tag { background: #e7f5ff; color: #1971c2; font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
 
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
+
+    /* 사용자 입력 관리 영역 (맨 아래 배치 + 뷰/편집 모드 분리) */
+    .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-top: 12px; margin-bottom: 14px; }
+    .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
+    .panel-title { font-size: 13px; font-weight: 700; color: #800020; }
+    .btn-edit-toggle { background: #e9ecef; color: #495057; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    
+    .info-view-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .info-view-table td { padding: 4px 0; vertical-align: top; }
+    .info-view-table td.lbl { width: 85px; color: #868e96; font-weight: 600; }
+    .info-view-table td.val { color: #212529; font-weight: 500; }
+
+    .info-edit-form { display: none; flex-direction: column; gap: 8px; }
+    .info-input-row { display: flex; gap: 8px; }
+    .info-field { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+    .info-field label { font-size: 11px; font-weight: 700; color: #6c757d; }
+    .info-field input, .info-field textarea { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; background: #fff; }
+    .info-field input:focus, .info-field textarea:focus { border-color: #800020; }
+    
+    .edit-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
+    .btn-save-info { background: #800020; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-cancel-info { background: #ced4da; color: #495057; border: none; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
     .card-actions { display: flex; gap: 8px; margin-top: 8px; }
     .btn-photo-label { flex: 1; padding: 10px; background: #e7f5ff; color: #1971c2; border: 1px solid #a5d8ff; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; display: block; }
@@ -318,10 +328,9 @@
 
         const nameEnHtml = w.name_en ? `<div class="wine-name-en">${w.name_en}</div>` : '';
 
-        // 가격, 구매처, 비고 필드 정돈
-        const curPrice = w.purchase_price ? Number(w.purchase_price).toLocaleString() : '';
-        const curPlace = w.purchase_place || '';
-        const curMemo = w.notes || w.memo || '';
+        const curPriceText = w.purchase_price ? '₩' + Number(w.purchase_price).toLocaleString() : '-';
+        const curPlaceText = w.purchase_place || '-';
+        const curMemoText = w.notes || w.memo || '-';
 
         html += `
           <div class="wine-card" onclick="toggleCard(this)">
@@ -335,7 +344,7 @@
                 ${nameEnHtml}
                 <div class="wine-sub-text">
                   ${w.country || ''} ❯ ${w.producer || ''}
-                  ${curPrice ? ` · <b style="color:#800020;">₩${curPrice}</b>` : ''}
+                  ${w.purchase_price ? ` · <b style="color:#800020;">${curPriceText}</b>` : ''}
                 </div>
               </div>
               <div class="wine-badge-box">
@@ -347,30 +356,7 @@
             <div class="wine-body" onclick="event.stopPropagation()">
               ${detailImgHtml}
 
-              <!-- 💰 구매 정보 및 비고 입력/확인 영역 -->
-              <div class="user-info-panel">
-                <div class="panel-title">
-                  <span>💰 구매 정보 & 비고 메모</span>
-                </div>
-                <div class="info-input-group">
-                  <div class="info-input-row">
-                    <div class="info-field">
-                      <label>구매 가격 (원)</label>
-                      <input type="number" id="inp_price_${w.id}" value="${w.purchase_price || ''}" placeholder="예: 1500000">
-                    </div>
-                    <div class="info-field">
-                      <label>구매처</label>
-                      <input type="text" id="inp_place_${w.id}" value="${curPlace}" placeholder="예: 직구, 샵이름">
-                    </div>
-                  </div>
-                  <div class="info-field">
-                    <label>비고 (메모 / 셀러 위치 등)</label>
-                    <textarea id="inp_memo_${w.id}" rows="2" placeholder="메모할 내용을 입력하세요">${curMemo}</textarea>
-                  </div>
-                  <button type="button" class="btn-save-info" onclick="saveWineMeta('${w.id}')">💾 구매정보/비고 저장</button>
-                </div>
-              </div>
-
+              <!-- 와인 기본 스펙 -->
               <table class="spec-table">
                 <tr><td class="k">📍 생산지</td><td class="v">${w.country || '-'} ❯ ${w.region || '-'}</td></tr>
                 <tr><td class="k">🍇 품종</td><td class="v">${varieties}</td></tr>
@@ -379,6 +365,7 @@
                 <tr><td class="k">⏳ 시음적기</td><td class="v"><b>${w.drinking_window_start || '?'}년 ~ ${w.drinking_window_end || '?'}년</b></td></tr>
               </table>
 
+              <!-- 아로마 & 테이스팅 노트 -->
               <div class="note-box">
                 <div class="note-label">👃 대표 아로마</div>
                 <div class="aroma-tags">${aromaHtml}</div>
@@ -388,6 +375,44 @@
                 <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
               </div>
 
+              <!-- 💰 구매 정보 및 비고 패널 (최하단 배치 + 에디트 모드 제어) -->
+              <div class="user-info-panel">
+                <div class="panel-header">
+                  <span class="panel-title">💰 구매 정보 & 비고</span>
+                  <button type="button" class="btn-edit-toggle" id="btnEdit_${w.id}" onclick="toggleEditMode('${w.id}', true)">✏️ 수정</button>
+                </div>
+
+                <!-- 1. 기본 뷰 모드 (읽기 전용) -->
+                <table class="info-view-table" id="viewBox_${w.id}">
+                  <tr><td class="lbl">구매 가격</td><td class="val"><b>${curPriceText}</b></td></tr>
+                  <tr><td class="lbl">구매처</td><td class="val">${curPlaceText}</td></tr>
+                  <tr><td class="lbl">비고(메모)</td><td class="val">${curMemoText}</td></tr>
+                </table>
+
+                <!-- 2. 에디트 모드 (에디트 클릭 시 노출) -->
+                <div class="info-edit-form" id="editBox_${w.id}">
+                  <div class="info-input-row">
+                    <div class="info-field">
+                      <label>구매 가격 (원)</label>
+                      <input type="number" id="inp_price_${w.id}" value="${w.purchase_price || ''}" placeholder="숫자만 입력">
+                    </div>
+                    <div class="info-field">
+                      <label>구매처</label>
+                      <input type="text" id="inp_place_${w.id}" value="${w.purchase_place || ''}" placeholder="예: 직구, 샵이름">
+                    </div>
+                  </div>
+                  <div class="info-field">
+                    <label>비고 메모</label>
+                    <textarea id="inp_memo_${w.id}" rows="2" placeholder="메모할 내용을 입력하세요">${w.notes || w.memo || ''}</textarea>
+                  </div>
+                  <div class="edit-actions">
+                    <button type="button" class="btn-cancel-info" onclick="toggleEditMode('${w.id}', false)">취소</button>
+                    <button type="button" class="btn-save-info" onclick="saveWineMeta('${w.id}')">💾 저장</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 하단 액션 버튼 -->
               <div class="card-actions">
                 <input type="file" id="cardFile_${w.id}" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile('${w.id}', this.files[0])">
                 <label for="cardFile_${w.id}" class="btn-photo-label">📷 라벨 사진 앨범에서 선택</label>
@@ -401,7 +426,24 @@
       container.innerHTML = html;
     }
 
-    // 구매 정보 및 비고 DB 저장 함수
+    // 에디트 모드 켜기/끄기
+    function toggleEditMode(wineId, isEdit) {
+      const viewBox = document.getElementById(`viewBox_${wineId}`);
+      const editBox = document.getElementById(`editBox_${wineId}`);
+      const btnEdit = document.getElementById(`btnEdit_${wineId}`);
+
+      if (isEdit) {
+        viewBox.style.display = 'none';
+        editBox.style.display = 'flex';
+        btnEdit.style.display = 'none';
+      } else {
+        viewBox.style.display = 'table';
+        editBox.style.display = 'none';
+        btnEdit.style.display = 'block';
+      }
+    }
+
+    // 구매 정보 및 비고 DB 저장
     async function saveWineMeta(wineId) {
       const priceVal = document.getElementById(`inp_price_${wineId}`).value;
       const placeVal = document.getElementById(`inp_place_${wineId}`).value.trim();
@@ -416,10 +458,10 @@
       try {
         const { error } = await sb.from('wines').update(updateData).eq('id', wineId);
         if (error) throw error;
-        alert('구매 정보 및 비고가 성공적으로 저장되었습니다!');
+        alert('구매 정보 및 비고가 저장되었습니다!');
         fetchWines();
       } catch (err) {
-        alert('저장 중 오류가 발생했습니다: ' + err.message);
+        alert('저장 중 오류: ' + err.message);
       }
     }
 
