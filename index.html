@@ -9,19 +9,29 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; padding: 14px; color: #1a1a1a; }
     
-    .tab-bar { display: flex; gap: 8px; margin-bottom: 14px; }
+    .tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; background: #e4e7eb; color: #495057; cursor: pointer; }
     .tab-btn.active { background: #800020; color: #fff; }
 
-    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 6px 2px 14px; font-size: 15px; font-weight: 700; color: #333; }
+    /* 컨트롤 패널: 필터 & 정렬 */
+    .control-panel { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid #e1e4e8; box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+    .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+    .filter-chip { display: flex; align-items: center; gap: 4px; background: #f1f3f5; padding: 6px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #495057; cursor: pointer; user-select: none; }
+    .filter-chip input { display: none; }
+    .filter-chip.checked { background: #800020; color: #fff; }
+
+    .sort-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #f1f3f5; }
+    .sort-label { font-size: 13px; font-weight: 700; color: #495057; }
+    .sort-select { padding: 6px 10px; border-radius: 8px; border: 1px solid #ced4da; font-size: 13px; background: #fff; color: #212529; font-weight: 600; outline: none; }
+
+    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; font-size: 15px; font-weight: 700; color: #333; }
     .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
     
     /* 와인 카드 */
-    .wine-card { background: #fff; border-radius: 12px; margin-bottom: 12px; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
+    .wine-card { background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e1e4e8; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.04); }
     .wine-summary { padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .wine-summary:active { background: #f8f9fa; }
 
-    /* 라벨 이미지 썸네일 */
     .wine-thumb { width: 52px; height: 70px; border-radius: 6px; object-fit: cover; background: #eee; flex-shrink: 0; border: 1px solid #ddd; }
     .wine-thumb-placeholder { width: 52px; height: 70px; border-radius: 6px; background: #f1f3f5; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid #e9ecef; }
 
@@ -41,7 +51,6 @@
     .arrow { font-size: 11px; color: #adb5bd; transition: transform 0.2s ease; }
     .wine-card.active .arrow { transform: rotate(180deg); color: #800020; }
 
-    /* 상세 펼침 영역 */
     .wine-body { display: none; padding: 14px 16px 16px; background: #fafbfc; border-top: 1px solid #f1f3f5; }
     .wine-card.active .wine-body { display: block; }
     
@@ -85,6 +94,27 @@
   </div>
 
   <div id="tabListSection">
+    <!-- 분류 필터 & 정렬 컨트롤러 -->
+    <div class="control-panel">
+      <div class="filter-row">
+        <label class="filter-chip checked" id="chip-ALL"><input type="checkbox" checked onchange="toggleFilter('ALL')">전체보기</label>
+        <label class="filter-chip" id="chip-Red"><input type="checkbox" onchange="toggleFilter('Red')">레드</label>
+        <label class="filter-chip" id="chip-White"><input type="checkbox" onchange="toggleFilter('White')">화이트</label>
+        <label class="filter-chip" id="chip-Sparkling"><input type="checkbox" onchange="toggleFilter('Sparkling')">스파클링</label>
+        <label class="filter-chip" id="chip-Dessert"><input type="checkbox" onchange="toggleFilter('Dessert')">디저트</label>
+      </div>
+      <div class="sort-row">
+        <span class="sort-label">정렬 기준</span>
+        <select id="sortSelect" class="sort-select" onchange="applyFilterAndSort()">
+          <option value="name_asc">이름 가나다순</option>
+          <option value="name_desc">이름 역순</option>
+          <option value="country_asc">국가별 (가나다)</option>
+          <option value="vintage_desc">빈티지 최신순</option>
+          <option value="vintage_asc">빈티지 오래된순</option>
+        </select>
+      </div>
+    </div>
+
     <div class="header-bar">
       <span id="countText">🍷 컬렉션 조회 중...</span>
       <button class="reload-btn" onclick="fetchWines()">새로고침</button>
@@ -115,7 +145,9 @@
     const GEMINI_API_KEY = "AQ.Ab8RN6Iy1CDncxP4TmQsoIStUXCsAwtVC7Op0Fy_NcAYdrL_NQ";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    let allWines = [];
     let selectedFiles = [];
+    let activeFilters = new Set(['ALL']);
 
     function switchView(tab) {
       if (tab === 'list') {
@@ -143,29 +175,183 @@
       return "●".repeat(n) + "○".repeat(5 - n);
     }
 
-    // 와인 분류 판별 (발디카바 및 BDM은 무조건 레드로 확정)
+    // 와인 분류 판별 (발디카바 및 BDM은 레드로 고정)
     function resolveWineType(w) {
       const name = ((w.name_ko || '') + ' ' + (w.name_en || '')).toLowerCase();
       const rawType = (w.wine_type || '').toLowerCase();
 
       if (name.includes('발디카바') || name.includes('valdicava') || name.includes('브루넬로') || name.includes('brunello') || name.includes('몬탈치노') || name.includes('카베르네') || name.includes('cabernet')) {
-        return { label: '레드', cls: 'type-red' };
+        return { key: 'Red', label: '레드', cls: 'type-red' };
       }
       if (name.includes('샴페인') || name.includes('champagne') || name.includes('스푸만테') || name.includes('spumante') || rawType.includes('sparkling')) {
-        return { label: '스파클링', cls: 'type-sparkling' };
+        return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
       }
       if (name.includes('소테른') || name.includes('sauternes') || name.includes('슈페트레제') || name.includes('spatlese') || name.includes('아이스') || name.includes('ice')) {
-        return { label: '디저트', cls: 'type-dessert' };
+        return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
       }
       if (name.includes('소비뇽 블랑') || name.includes('sauvignon blanc') || name.includes('리슬링') || name.includes('riesling') || rawType.includes('white')) {
-        return { label: '화이트', cls: 'type-white' };
+        return { key: 'White', label: '화이트', cls: 'type-white' };
       }
-      return { label: '레드', cls: 'type-red' };
+      return { key: 'Red', label: '레드', cls: 'type-red' };
+    }
+
+    function toggleFilter(type) {
+      if (type === 'ALL') {
+        activeFilters.clear();
+        activeFilters.add('ALL');
+      } else {
+        activeFilters.delete('ALL');
+        if (activeFilters.has(type)) {
+          activeFilters.delete(type);
+        } else {
+          activeFilters.add(type);
+        }
+        if (activeFilters.size === 0) {
+          activeFilters.add('ALL');
+        }
+      }
+
+      ['ALL', 'Red', 'White', 'Sparkling', 'Dessert'].forEach(t => {
+        const chip = document.getElementById(`chip-${t}`);
+        if (activeFilters.has(t)) {
+          chip.classList.add('checked');
+          chip.querySelector('input').checked = true;
+        } else {
+          chip.classList.remove('checked');
+          chip.querySelector('input').checked = false;
+        }
+      });
+
+      applyFilterAndSort();
+    }
+
+    function applyFilterAndSort() {
+      const container = document.getElementById('winesContainer');
+      const countText = document.getElementById('countText');
+      const sortMode = document.getElementById('sortSelect').value;
+
+      // 1. 필터링
+      let filtered = allWines.filter(w => {
+        if (activeFilters.has('ALL')) return true;
+        const typeInfo = resolveWineType(w);
+        return activeFilters.has(typeInfo.key);
+      });
+
+      // 2. 정렬
+      filtered.sort((a, b) => {
+        if (sortMode === 'name_asc') {
+          return (a.name_ko || '').localeCompare(b.name_ko || '', 'ko');
+        } else if (sortMode === 'name_desc') {
+          return (b.name_ko || '').localeCompare(a.name_ko || '', 'ko');
+        } else if (sortMode === 'country_asc') {
+          const cA = a.country || '';
+          const cB = b.country || '';
+          if (cA === cB) return (a.name_ko || '').localeCompare(b.name_ko || '', 'ko');
+          return cA.localeCompare(cB, 'ko');
+        } else if (sortMode === 'vintage_desc') {
+          return (b.vintage || 0) - (a.vintage || 0);
+        } else if (sortMode === 'vintage_asc') {
+          return (a.vintage || 9999) - (b.vintage || 9999);
+        }
+        return 0;
+      });
+
+      countText.innerText = `보관 중인 와인 (${filtered.length}병 / 전체 ${allWines.length}병)`;
+
+      if (filtered.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">조건에 맞는 와인이 없습니다.</p>';
+        return;
+      }
+
+      let html = '';
+      filtered.forEach(w => {
+        let notes = w.tasting_notes || {};
+        if (typeof notes === 'string') {
+          try { notes = JSON.parse(notes); } catch(e) { notes = {}; }
+        }
+        let scores = w.expert_scores || {};
+        if (typeof scores === 'string') {
+          try { scores = JSON.parse(scores); } catch(e) { scores = {}; }
+        }
+
+        let scoreChips = '';
+        for (let k in scores) {
+          scoreChips += `<span class="score-chip">${k} ${scores[k]}</span>`;
+        }
+        if (!scoreChips) scoreChips = '<span style="color:#adb5bd;">점수 없음</span>';
+
+        let aromaHtml = '';
+        let aromas = notes.aroma || [];
+        if (Array.isArray(aromas) && aromas.length > 0) {
+          aromas.forEach(a => { aromaHtml += `<span class="tag">#${a}</span>`; });
+        } else {
+          aromaHtml = '<span style="color:#adb5bd; font-size:12px;">아로마 데이터 없음</span>';
+        }
+
+        let varieties = '-';
+        if (Array.isArray(w.grape_varieties)) {
+          varieties = w.grape_varieties.join(', ');
+        } else if (w.grape_varieties) {
+          varieties = w.grape_varieties;
+        }
+
+        const typeInfo = resolveWineType(w);
+        const vintageStr = w.vintage ? w.vintage : 'NV';
+        
+        const thumbHtml = w.image_url 
+          ? `<img src="${w.image_url}" class="wine-thumb" alt="label">` 
+          : `<div class="wine-thumb-placeholder">🍷</div>`;
+
+        const detailImgHtml = w.image_url 
+          ? `<div class="detail-img-box"><img src="${w.image_url}" class="detail-large-img" alt="label"></div>` 
+          : '';
+
+        html += `
+          <div class="wine-card" onclick="toggleCard(this)">
+            <div class="wine-summary">
+              ${thumbHtml}
+              <div class="wine-name-box">
+                <div class="wine-tag-row">
+                  <span class="type-badge ${typeInfo.cls}">${typeInfo.label}</span>
+                </div>
+                <div class="wine-name">${w.name_ko || '미확인 와인'}</div>
+                <div class="wine-sub-text">${w.country || ''} ❯ ${w.producer || ''}</div>
+              </div>
+              <div class="wine-badge-box">
+                <span class="badge-vintage">${vintageStr}</span>
+                <span class="arrow">▼</span>
+              </div>
+            </div>
+
+            <div class="wine-body" onclick="event.stopPropagation()">
+              ${detailImgHtml}
+              <div class="wine-en-title">${w.name_en || ''}</div>
+              <table class="spec-table">
+                <tr><td class="k">📍 생산지</td><td class="v">${w.country || '-'} ❯ ${w.region || '-'}</td></tr>
+                <tr><td class="k">🍇 품종</td><td class="v">${varieties}</td></tr>
+                <tr><td class="k">⭐ 평점</td><td class="v">${scoreChips}</td></tr>
+                <tr><td class="k">🏆 추천빈티지</td><td class="v">${w.best_vintages || '-'}</td></tr>
+                <tr><td class="k">⏳ 시음적기</td><td class="v"><b>${w.drinking_window_start || '?'}년 ~ ${w.drinking_window_end || '?'}년</b></td></tr>
+              </table>
+
+              <div class="note-box">
+                <div class="note-label">👃 대표 아로마</div>
+                <div class="aroma-tags">${aromaHtml}</div>
+                <div class="note-label">👅 맛 & 구조감</div>
+                <div class="gauge-item"><span>바디감 (Body)</span><span class="gauge-dots">${makeDots(notes.body)}</span></div>
+                <div class="gauge-item"><span>타닌 (Tannin)</span><span class="gauge-dots">${makeDots(notes.tannin)}</span></div>
+                <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
     }
 
     async function fetchWines() {
       const container = document.getElementById('winesContainer');
-      const countText = document.getElementById('countText');
       container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">목록을 불러오는 중...</p>';
 
       try {
@@ -175,103 +361,14 @@
           .order('name_ko', { ascending: true });
 
         if (error) throw error;
-        countText.innerText = `보관 중인 와인 (${wines.length}병)`;
-
-        if (!wines || wines.length === 0) {
-          container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">보관된 와인이 없습니다.</p>';
-          return;
-        }
-
-        let html = '';
-        wines.forEach(w => {
-          let notes = w.tasting_notes || {};
-          if (typeof notes === 'string') {
-            try { notes = JSON.parse(notes); } catch(e) { notes = {}; }
-          }
-          let scores = w.expert_scores || {};
-          if (typeof scores === 'string') {
-            try { scores = JSON.parse(scores); } catch(e) { scores = {}; }
-          }
-
-          let scoreChips = '';
-          for (let k in scores) {
-            scoreChips += `<span class="score-chip">${k} ${scores[k]}</span>`;
-          }
-          if (!scoreChips) scoreChips = '<span style="color:#adb5bd;">점수 없음</span>';
-
-          let aromaHtml = '';
-          let aromas = notes.aroma || [];
-          if (Array.isArray(aromas) && aromas.length > 0) {
-            aromas.forEach(a => { aromaHtml += `<span class="tag">#${a}</span>`; });
-          } else {
-            aromaHtml = '<span style="color:#adb5bd; font-size:12px;">아로마 데이터 없음</span>';
-          }
-
-          let varieties = '-';
-          if (Array.isArray(w.grape_varieties)) {
-            varieties = w.grape_varieties.join(', ');
-          } else if (w.grape_varieties) {
-            varieties = w.grape_varieties;
-          }
-
-          const typeInfo = resolveWineType(w);
-          const vintageStr = w.vintage ? w.vintage : 'NV';
-          
-          const thumbHtml = w.image_url 
-            ? `<img src="${w.image_url}" class="wine-thumb" alt="label">` 
-            : `<div class="wine-thumb-placeholder">🍷</div>`;
-
-          const detailImgHtml = w.image_url 
-            ? `<div class="detail-img-box"><img src="${w.image_url}" class="detail-large-img" alt="label"></div>` 
-            : '';
-
-          html += `
-            <div class="wine-card" onclick="toggleCard(this)">
-              <div class="wine-summary">
-                ${thumbHtml}
-                <div class="wine-name-box">
-                  <div class="wine-tag-row">
-                    <span class="type-badge ${typeInfo.cls}">${typeInfo.label}</span>
-                  </div>
-                  <div class="wine-name">${w.name_ko || '미확인 와인'}</div>
-                  <div class="wine-sub-text">${w.producer || w.country || ''}</div>
-                </div>
-                <div class="wine-badge-box">
-                  <span class="badge-vintage">${vintageStr}</span>
-                  <span class="arrow">▼</span>
-                </div>
-              </div>
-
-              <div class="wine-body" onclick="event.stopPropagation()">
-                ${detailImgHtml}
-                <div class="wine-en-title">${w.name_en || ''}</div>
-                <table class="spec-table">
-                  <tr><td class="k">📍 생산지</td><td class="v">${w.country || '-'} ❯ ${w.region || '-'}</td></tr>
-                  <tr><td class="k">🍇 품종</td><td class="v">${varieties}</td></tr>
-                  <tr><td class="k">⭐ 평점</td><td class="v">${scoreChips}</td></tr>
-                  <tr><td class="k">🏆 추천빈티지</td><td class="v">${w.best_vintages || '-'}</td></tr>
-                  <tr><td class="k">⏳ 시음적기</td><td class="v"><b>${w.drinking_window_start || '?'}년 ~ ${w.drinking_window_end || '?'}년</b></td></tr>
-                </table>
-
-                <div class="note-box">
-                  <div class="note-label">👃 대표 아로마</div>
-                  <div class="aroma-tags">${aromaHtml}</div>
-                  <div class="note-label">👅 맛 & 구조감</div>
-                  <div class="gauge-item"><span>바디감 (Body)</span><span class="gauge-dots">${makeDots(notes.body)}</span></div>
-                  <div class="gauge-item"><span>타닌 (Tannin)</span><span class="gauge-dots">${makeDots(notes.tannin)}</span></div>
-                  <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
-                </div>
-              </div>
-            </div>
-          `;
-        });
-
-        container.innerHTML = html;
+        allWines = wines || [];
+        applyFilterAndSort();
       } catch (err) {
         container.innerHTML = '<p style="text-align: center; color: #fa5252; padding: 40px;">목록을 불러오지 못했습니다.<br>' + err.message + '</p>';
       }
     }
 
+    // 사진 관리 핸들러
     document.getElementById('fileIn').addEventListener('change', e => handleFiles(e.target.files));
     document.getElementById('camIn').addEventListener('change', e => handleFiles(e.target.files));
 
