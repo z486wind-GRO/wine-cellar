@@ -70,7 +70,7 @@
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
 
-    /* 사용자 입력 관리 영역 (맨 아래 배치 + 뷰/편집 모드 분리) */
+    /* 사용자 입력 관리 패널 */
     .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-top: 12px; margin-bottom: 14px; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
     .panel-title { font-size: 13px; font-weight: 700; color: #800020; }
@@ -216,6 +216,16 @@
       return { key: 'Red', label: '레드', cls: 'type-red' };
     }
 
+    // 가격 표시 포맷 (숫자면 ₩1,500,000, 텍스트면 "선물" 그대로)
+    function formatPrice(val) {
+      if (!val) return '-';
+      const clean = String(val).replace(/,/g, '').trim();
+      if (!isNaN(clean) && clean !== '') {
+        return '₩' + Number(clean).toLocaleString();
+      }
+      return val;
+    }
+
     function toggleFilter(type) {
       if (type === 'ALL') {
         activeFilters.clear();
@@ -328,7 +338,7 @@
 
         const nameEnHtml = w.name_en ? `<div class="wine-name-en">${w.name_en}</div>` : '';
 
-        const curPriceText = w.purchase_price ? '₩' + Number(w.purchase_price).toLocaleString() : '-';
+        const curPriceText = formatPrice(w.purchase_price);
         const curPlaceText = w.purchase_place || '-';
         const curMemoText = w.notes || w.memo || '-';
 
@@ -356,7 +366,6 @@
             <div class="wine-body" onclick="event.stopPropagation()">
               ${detailImgHtml}
 
-              <!-- 와인 기본 스펙 -->
               <table class="spec-table">
                 <tr><td class="k">📍 생산지</td><td class="v">${w.country || '-'} ❯ ${w.region || '-'}</td></tr>
                 <tr><td class="k">🍇 품종</td><td class="v">${varieties}</td></tr>
@@ -365,7 +374,6 @@
                 <tr><td class="k">⏳ 시음적기</td><td class="v"><b>${w.drinking_window_start || '?'}년 ~ ${w.drinking_window_end || '?'}년</b></td></tr>
               </table>
 
-              <!-- 아로마 & 테이스팅 노트 -->
               <div class="note-box">
                 <div class="note-label">👃 대표 아로마</div>
                 <div class="aroma-tags">${aromaHtml}</div>
@@ -375,26 +383,26 @@
                 <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
               </div>
 
-              <!-- 💰 구매 정보 및 비고 패널 (최하단 배치 + 에디트 모드 제어) -->
+              <!-- 💰 구매 정보 및 비고 패널 (최하단 배치) -->
               <div class="user-info-panel">
                 <div class="panel-header">
                   <span class="panel-title">💰 구매 정보 & 비고</span>
                   <button type="button" class="btn-edit-toggle" id="btnEdit_${w.id}" onclick="toggleEditMode('${w.id}', true)">✏️ 수정</button>
                 </div>
 
-                <!-- 1. 기본 뷰 모드 (읽기 전용) -->
+                <!-- 1. 기본 뷰 모드 -->
                 <table class="info-view-table" id="viewBox_${w.id}">
                   <tr><td class="lbl">구매 가격</td><td class="val"><b>${curPriceText}</b></td></tr>
                   <tr><td class="lbl">구매처</td><td class="val">${curPlaceText}</td></tr>
                   <tr><td class="lbl">비고(메모)</td><td class="val">${curMemoText}</td></tr>
                 </table>
 
-                <!-- 2. 에디트 모드 (에디트 클릭 시 노출) -->
+                <!-- 2. 에디트 모드 (텍스트 자유 입력) -->
                 <div class="info-edit-form" id="editBox_${w.id}">
                   <div class="info-input-row">
                     <div class="info-field">
-                      <label>구매 가격 (원)</label>
-                      <input type="number" id="inp_price_${w.id}" value="${w.purchase_price || ''}" placeholder="숫자만 입력">
+                      <label>구매 가격</label>
+                      <input type="text" id="inp_price_${w.id}" value="${w.purchase_price || ''}" placeholder="예: 1500000 또는 선물">
                     </div>
                     <div class="info-field">
                       <label>구매처</label>
@@ -412,7 +420,6 @@
                 </div>
               </div>
 
-              <!-- 하단 액션 버튼 -->
               <div class="card-actions">
                 <input type="file" id="cardFile_${w.id}" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile('${w.id}', this.files[0])">
                 <label for="cardFile_${w.id}" class="btn-photo-label">📷 라벨 사진 앨범에서 선택</label>
@@ -426,7 +433,6 @@
       container.innerHTML = html;
     }
 
-    // 에디트 모드 켜기/끄기
     function toggleEditMode(wineId, isEdit) {
       const viewBox = document.getElementById(`viewBox_${wineId}`);
       const editBox = document.getElementById(`editBox_${wineId}`);
@@ -443,14 +449,14 @@
       }
     }
 
-    // 구매 정보 및 비고 DB 저장
+    // 구매 정보 및 비고 DB 저장 (문자열/단독메모 완전 허용)
     async function saveWineMeta(wineId) {
-      const priceVal = document.getElementById(`inp_price_${wineId}`).value;
+      const priceVal = document.getElementById(`inp_price_${wineId}`).value.trim();
       const placeVal = document.getElementById(`inp_place_${wineId}`).value.trim();
       const memoVal = document.getElementById(`inp_memo_${wineId}`).value.trim();
 
       const updateData = {
-        purchase_price: priceVal ? parseInt(priceVal) : null,
+        purchase_price: priceVal || null,
         purchase_place: placeVal || null,
         notes: memoVal || null
       };
@@ -458,7 +464,7 @@
       try {
         const { error } = await sb.from('wines').update(updateData).eq('id', wineId);
         if (error) throw error;
-        alert('구매 정보 및 비고가 저장되었습니다!');
+        alert('저장되었습니다!');
         fetchWines();
       } catch (err) {
         alert('저장 중 오류: ' + err.message);
