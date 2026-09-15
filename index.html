@@ -30,8 +30,8 @@
     .wine-summary { padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
     .wine-summary:active { background: #f8f9fa; }
 
-    .wine-thumb { width: 52px; height: 70px; border-radius: 6px; object-fit: cover; background: #eee; flex-shrink: 0; border: 1px solid #ddd; }
-    .wine-thumb-placeholder { width: 52px; height: 70px; border-radius: 6px; background: #f1f3f5; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid #e9ecef; }
+    .wine-thumb { width: 52px; height: 72px; border-radius: 6px; object-fit: cover; background: #fff; flex-shrink: 0; border: 1px solid #ddd; }
+    .wine-thumb-placeholder { width: 52px; height: 72px; border-radius: 6px; background: #f1f3f5; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; border: 1px solid #e9ecef; }
 
     .wine-name-box { flex: 1; min-width: 0; }
     .wine-tag-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -52,7 +52,7 @@
     .wine-body { display: none; padding: 14px 16px 16px; background: #fafbfc; border-top: 1px solid #f1f3f5; }
     .wine-card.active .wine-body { display: block; }
     
-    .detail-img-box { text-align: center; margin-bottom: 14px; }
+    .detail-img-box { text-align: center; margin-bottom: 12px; }
     .detail-large-img { max-width: 180px; max-height: 240px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 3px 6px rgba(0,0,0,0.1); }
 
     .wine-en-title { font-size: 12px; color: #6c757d; font-style: italic; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
@@ -70,9 +70,10 @@
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
 
-    /* 삭제 버튼 스타일 */
-    .btn-delete { width: 100%; padding: 10px; background: #fff5f5; color: #e03131; border: 1px solid #ffc9c9; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-    .btn-delete:active { background: #ffe3e3; }
+    /* 카드 하단 액션 버튼 그룹 */
+    .card-actions { display: flex; gap: 8px; margin-top: 8px; }
+    .btn-photo { flex: 1; padding: 10px; background: #e7f5ff; color: #1971c2; border: 1px solid #a5d8ff; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .btn-delete { flex: 1; padding: 10px; background: #fff5f5; color: #e03131; border: 1px solid #ffc9c9; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
 
     #tabUploadSection { display: none; background: #fff; padding: 22px 18px; border-radius: 14px; text-align: center; }
     .btn-action { width: 100%; padding: 14px; border-radius: 10px; border: none; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; }
@@ -89,9 +90,12 @@
 </head>
 <body>
 
+  <!-- 개별 와인 라벨 사진 선택용 숨김 input -->
+  <input type="file" id="singlePhotoIn" accept="image/*" style="display:none;">
+
   <div class="tab-bar">
     <button class="tab-btn active" id="btnList" onclick="switchView('list')">🍷 와인 컬렉션</button>
-    <button class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 라벨 등록</button>
+    <button class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 새 라벨 등록</button>
   </div>
 
   <div id="tabListSection">
@@ -148,6 +152,7 @@
     let allWines = [];
     let selectedFiles = [];
     let activeFilters = new Set(['ALL']);
+    let currentUpdatingWineId = null;
 
     function switchView(tab) {
       if (tab === 'list') {
@@ -295,11 +300,13 @@
         const typeInfo = resolveWineType(w);
         const vintageStr = w.vintage ? w.vintage : 'NV';
         
-        const thumbHtml = w.image_url 
+        // 이미지 유효성 체크 (외부 깨진 링크 방어)
+        const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
+        const thumbHtml = hasValidImg 
           ? `<img src="${w.image_url}" class="wine-thumb" alt="label">` 
           : `<div class="wine-thumb-placeholder">🍷</div>`;
 
-        const detailImgHtml = w.image_url 
+        const detailImgHtml = hasValidImg 
           ? `<div class="detail-img-box"><img src="${w.image_url}" class="detail-large-img" alt="label"></div>` 
           : '';
 
@@ -340,7 +347,10 @@
                 <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
               </div>
 
-              <button class="btn-delete" onclick="deleteWine('${w.id}', '${(w.name_ko || '').replace(/'/g, "\\'")}')">🗑️ 셀러에서 이 와인 삭제</button>
+              <div class="card-actions">
+                <button class="btn-photo" onclick="triggerPhotoUpload('${w.id}')">📷 라벨 사진 등록/변경</button>
+                <button class="btn-delete" onclick="deleteWine('${w.id}', '${(w.name_ko || '').replace(/'/g, "\\'")}')">🗑️ 삭제</button>
+              </div>
             </div>
           </div>
         `;
@@ -349,17 +359,43 @@
       container.innerHTML = html;
     }
 
-    async function deleteWine(wineId, wineName) {
-      if (!confirm(`'${wineName}'을(를) 셀러에서 삭제하시겠습니까?`)) {
-        return;
+    // 개별 와인 사진 업로드 트리거
+    function triggerPhotoUpload(wineId) {
+      currentUpdatingWineId = wineId;
+      document.getElementById('singlePhotoIn').click();
+    }
+
+    document.getElementById('singlePhotoIn').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file || !currentUpdatingWineId) return;
+
+      try {
+        const imgData = await resizeImage(file);
+        const { error } = await sb
+          .from('wines')
+          .update({ image_url: imgData.dataUrl })
+          .eq('id', currentUpdatingWineId);
+
+        if (error) throw error;
+        alert('라벨 사진이 등록되었습니다!');
+        fetchWines();
+      } catch (err) {
+        alert('사진 등록 중 오류: ' + err.message);
+      } finally {
+        e.target.value = '';
+        currentUpdatingWineId = null;
       }
+    });
+
+    async function deleteWine(wineId, wineName) {
+      if (!confirm(`'${wineName}'을(를) 셀러에서 삭제하시겠습니까?`)) return;
       try {
         const { error } = await sb.from('wines').delete().eq('id', wineId);
         if (error) throw error;
         alert('삭제되었습니다.');
         fetchWines();
       } catch (err) {
-        alert('삭제 중 오류가 발생했습니다: ' + err.message);
+        alert('삭제 중 오류: ' + err.message);
       }
     }
 
@@ -381,6 +417,7 @@
       }
     }
 
+    // 대량 라벨 등록 탭
     document.getElementById('fileIn').addEventListener('change', e => handleFiles(e.target.files));
     document.getElementById('camIn').addEventListener('change', e => handleFiles(e.target.files));
 
