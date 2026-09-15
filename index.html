@@ -216,7 +216,6 @@
       return { key: 'Red', label: '레드', cls: 'type-red' };
     }
 
-    // 가격 표시 포맷 (숫자면 ₩1,500,000, 텍스트면 "선물" 그대로)
     function formatPrice(val) {
       if (!val) return '-';
       const clean = String(val).replace(/,/g, '').trim();
@@ -358,7 +357,7 @@
                 </div>
               </div>
               <div class="wine-badge-box">
-                <span class="badge-vintage">${vintageStr}</span>
+                <span class="badge-vintage" id="vintage_badge_${w.id}">${vintageStr}</span>
                 <span class="arrow">▼</span>
               </div>
             </div>
@@ -383,35 +382,40 @@
                 <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
               </div>
 
-              <!-- 💰 구매 정보 및 비고 패널 (최하단 배치) -->
+              <!-- 💰 구매 정보, 빈티지 및 비고 패널 -->
               <div class="user-info-panel">
                 <div class="panel-header">
-                  <span class="panel-title">💰 구매 정보 & 비고</span>
+                  <span class="panel-title">💰 빈티지 / 구매 정보 / 메모</span>
                   <button type="button" class="btn-edit-toggle" id="btnEdit_${w.id}" onclick="toggleEditMode('${w.id}', true)">✏️ 수정</button>
                 </div>
 
                 <!-- 1. 기본 뷰 모드 -->
                 <table class="info-view-table" id="viewBox_${w.id}">
+                  <tr><td class="lbl">빈티지</td><td class="val"><b>${w.vintage || 'NV (미지정)'}</b></td></tr>
                   <tr><td class="lbl">구매 가격</td><td class="val"><b>${curPriceText}</b></td></tr>
                   <tr><td class="lbl">구매처</td><td class="val">${curPlaceText}</td></tr>
                   <tr><td class="lbl">비고(메모)</td><td class="val">${curMemoText}</td></tr>
                 </table>
 
-                <!-- 2. 에디트 모드 (텍스트 자유 입력) -->
+                <!-- 2. 에디트 모드 (빈티지 입력 필드 포함) -->
                 <div class="info-edit-form" id="editBox_${w.id}">
                   <div class="info-input-row">
+                    <div class="info-field" style="max-width: 110px;">
+                      <label>빈티지 (연도)</label>
+                      <input type="number" id="inp_vintage_${w.id}" value="${w.vintage || ''}" placeholder="예: 2021">
+                    </div>
                     <div class="info-field">
                       <label>구매 가격</label>
                       <input type="text" id="inp_price_${w.id}" value="${w.purchase_price || ''}" placeholder="예: 1500000 또는 선물">
                     </div>
-                    <div class="info-field">
-                      <label>구매처</label>
-                      <input type="text" id="inp_place_${w.id}" value="${w.purchase_place || ''}" placeholder="예: 직구, 샵이름">
-                    </div>
+                  </div>
+                  <div class="info-field">
+                    <label>구매처</label>
+                    <input type="text" id="inp_place_${w.id}" value="${w.purchase_place || ''}" placeholder="예: 직구, 이마트 등">
                   </div>
                   <div class="info-field">
                     <label>비고 메모</label>
-                    <textarea id="inp_memo_${w.id}" rows="2" placeholder="메모할 내용을 입력하세요">${w.notes || w.memo || ''}</textarea>
+                    <textarea id="inp_memo_${w.id}" rows="2" placeholder="후면 라벨 정보, 보관 위치 등">${w.notes || w.memo || ''}</textarea>
                   </div>
                   <div class="edit-actions">
                     <button type="button" class="btn-cancel-info" onclick="toggleEditMode('${w.id}', false)">취소</button>
@@ -449,13 +453,15 @@
       }
     }
 
-    // 구매 정보 및 비고 DB 저장 (문자열/단독메모 완전 허용)
+    // 빈티지 + 구매정보 + 비고 일괄 업데이트
     async function saveWineMeta(wineId) {
+      const vintageVal = document.getElementById(`inp_vintage_${wineId}`).value.trim();
       const priceVal = document.getElementById(`inp_price_${wineId}`).value.trim();
       const placeVal = document.getElementById(`inp_place_${wineId}`).value.trim();
       const memoVal = document.getElementById(`inp_memo_${wineId}`).value.trim();
 
       const updateData = {
+        vintage: vintageVal ? parseInt(vintageVal) : null,
         purchase_price: priceVal || null,
         purchase_place: placeVal || null,
         notes: memoVal || null
@@ -464,7 +470,7 @@
       try {
         const { error } = await sb.from('wines').update(updateData).eq('id', wineId);
         if (error) throw error;
-        alert('저장되었습니다!');
+        alert('빈티지 및 구매 정보가 저장되었습니다!');
         fetchWines();
       } catch (err) {
         alert('저장 중 오류: ' + err.message);
