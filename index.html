@@ -87,6 +87,7 @@
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
 
+    /* 사용자 입력 관리 패널 */
     .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-top: 12px; margin-bottom: 14px; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
     .panel-title { font-size: 13px; font-weight: 700; color: #800020; }
@@ -656,6 +657,7 @@
       renderThumbs();
     }
 
+    // AI 분석 및 DB 자동 등록
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -668,7 +670,7 @@
       let logHtml = '<b>🚀 총 ' + total + '병 등록 진행 중...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">';
       status.innerHTML = logHtml;
 
-      const prompt = `와인 또는 주류 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 다른 부가 텍스트나 백틱(\`\`\`json) 없이 순수 JSON만 반환하세요.
+      const prompt = `와인 또는 주류 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 다른 부가 텍스트나 백틱 없이 순수 JSON만 반환하세요.
 {
   "name_ko": "라벨에 표기된 한국어 정식 명칭",
   "name_en": "라벨에 표기된 원어/영어 명칭",
@@ -692,10 +694,11 @@
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini Vision AI로 라벨 분석 중...';
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI로 라벨 분석 중...';
 
         try {
-          const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
+          // 표준 gemini-1.5-flash 모델 엔드포인트 사용
+          const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
           const gRes = await fetch(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -739,7 +742,7 @@
 
           logHtml += '[' + (i + 1) + '/' + total + '] ✅ <b>' + parsedData.name_ko + '</b> 등록 완료!<br>';
         } catch (err) {
-          logHtml += '[' + (i + 1) + '/' + total + '] ❌ 실패: ' + err.message + '<br>';
+          logHtml += '[' + (i + 1) + '/' + total + '] ❌ 등록 오류: ' + err.message + '<br>';
         }
         status.innerHTML = logHtml;
       }
