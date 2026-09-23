@@ -87,7 +87,6 @@
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
 
-    /* 사용자 입력 관리 패널 */
     .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-top: 12px; margin-bottom: 14px; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
     .panel-title { font-size: 13px; font-weight: 700; color: #800020; }
@@ -657,7 +656,50 @@
       renderThumbs();
     }
 
-    // AI 분석 및 DB 자동 등록
+    // AI 다중 모델 자동 순차 호출 (3.5-flash -> 2.5-flash -> 2.0-flash)
+    async function requestGeminiVision(itemBase64, prompt) {
+      const candidateModels = [
+        'gemini-3.5-flash',
+        'gemini-2.5-flash',
+        'gemini-2.0-flash',
+        'gemini-1.5-flash-latest'
+      ];
+
+      let lastError = null;
+
+      for (const m of candidateModels) {
+        try {
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + m + ':generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inlineData: { mimeType: "image/jpeg", data: itemBase64 } }
+                ]
+              }],
+              generationConfig: {
+                responseMimeType: "application/json"
+              }
+            })
+          });
+
+          const data = await res.json();
+          if (res.ok && data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data;
+          }
+          if (data.error) {
+            lastError = data.error.message || ('HTTP ' + res.status);
+          }
+        } catch (e) {
+          lastError = e.message;
+        }
+      }
+      throw new Error(lastError || '모든 Gemini 모델 응답 실패');
+    }
+
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -694,36 +736,10 @@
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI로 라벨 분석 중...';
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI 라벨 분석 중...';
 
         try {
-          // 표준 gemini-1.5-flash 모델 엔드포인트 사용
-          const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
-          const gRes = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  { inlineData: { mimeType: "image/jpeg", data: item.base64 } }
-                ]
-              }],
-              generationConfig: {
-                responseMimeType: "application/json"
-              }
-            })
-          });
-
-          const gJson = await gRes.json();
-
-          if (!gRes.ok || gJson.error) {
-            throw new Error(gJson.error ? gJson.error.message : 'API 요청 실패 (HTTP ' + gRes.status + ')');
-          }
-
-          if (!gJson.candidates || !gJson.candidates[0] || !gJson.candidates[0].content) {
-            throw new Error('AI 응답에서 유효한 텍스트를 추출하지 못했습니다.');
-          }
+          const gJson = await requestGeminiVision(item.base64, prompt);
 
           let rawText = gJson.candidates[0].content.parts[0].text;
           rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
