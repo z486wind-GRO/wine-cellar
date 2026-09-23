@@ -9,7 +9,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; padding: 14px; color: #1a1a1a; }
     
-    /* 🔒 보안 로그인 게이트 화면 */
+    /* 🔒 보안 로그인 게이트 */
     #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #212529; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .auth-card { background: #fff; border-radius: 16px; padding: 30px 24px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
     .auth-title { font-size: 22px; font-weight: 800; color: #800020; margin-bottom: 8px; }
@@ -128,27 +128,27 @@
 </head>
 <body>
 
-  <!-- 🔒 1단계: 보안 비밀번호 확인 게이트 -->
+  <!-- 🔒 보안 로그인 게이트 -->
   <div id="authOverlay">
     <div class="auth-card">
       <div class="auth-title">🍷 와인 셀러 보안 접속</div>
       <div class="auth-desc">보관 중인 컬렉션 데이터 보호를 위해<br>비밀번호를 입력해 주세요.</div>
       <input type="password" id="pinInput" class="auth-input" placeholder="비밀번호" autofocus onkeydown="if(event.key==='Enter') checkAuth()">
-      <button class="auth-btn" onclick="checkAuth()">셀러 열기 🔓</button>
+      <button type="button" class="auth-btn" onclick="checkAuth()">셀러 열기 🔓</button>
       <div id="authError" class="auth-error">비밀번호가 올바르지 않습니다.</div>
     </div>
   </div>
 
-  <!-- 2단계: 인증 후 표시되는 메인 앱 -->
+  <!-- 메인 앱 영역 -->
   <div id="mainApp">
     <div class="top-header">
       <span style="font-weight: 800; font-size: 16px; color: #800020;">🍷 My Private Cellar</span>
-      <button class="logout-btn" onclick="lockCellar()">🔒 셀러 잠금</button>
+      <button type="button" class="logout-btn" onclick="lockCellar()">🔒 셀러 잠금</button>
     </div>
 
     <div class="tab-bar">
-      <button class="tab-btn active" id="btnList" onclick="switchView('list')">🍷 와인 컬렉션</button>
-      <button class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 새 라벨 등록</button>
+      <button type="button" class="tab-btn active" id="btnList" onclick="switchView('list')">🍷 와인 컬렉션</button>
+      <button type="button" class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 새 라벨 등록</button>
     </div>
 
     <div id="tabListSection">
@@ -174,7 +174,7 @@
 
       <div class="header-bar">
         <span id="countText">🍷 컬렉션 조회 중...</span>
-        <button class="reload-btn" onclick="fetchWines()">새로고침</button>
+        <button type="button" class="reload-btn" onclick="fetchWines()">새로고침</button>
       </div>
       <div id="winesContainer">
         <p style="text-align: center; color: #868e96; padding: 40px;">데이터를 조회하고 있습니다...</p>
@@ -211,7 +211,7 @@
     let activeFilters = new Set(['ALL']);
 
     function checkAuth() {
-      const pin = document.getElementById('pinInput').value;
+      const pin = document.getElementById('pinInput').value.trim();
       if (pin === CELLAR_PASSWORD) {
         localStorage.setItem('cellar_auth_token', 'valid');
         unlockUI();
@@ -308,7 +308,7 @@
       }
 
       ['ALL', 'Red', 'White', 'Sparkling', 'Dessert'].forEach(t => {
-        const chip = document.getElementById(`chip-${t}`);
+        const chip = document.getElementById('chip-' + t);
         if (activeFilters.has(t)) {
           chip.classList.add('checked');
           chip.querySelector('input').checked = true;
@@ -350,7 +350,7 @@
         return 0;
       });
 
-      countText.innerText = `보관 중인 와인 (${filtered.length}병 / 전체 ${allWines.length}병)`;
+      countText.innerText = '보관 중인 와인 (' + filtered.length + '병 / 전체 ' + allWines.length + '병)';
 
       if (filtered.length === 0) {
         container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">조건에 맞는 와인이 없습니다.</p>';
@@ -370,14 +370,14 @@
 
         let scoreChips = '';
         for (let k in scores) {
-          scoreChips += `<span class="score-chip">${k}${scores[k]}</span>`;
+          scoreChips += '<span class="score-chip">' + k + ' ' + scores[k] + '</span>';
         }
         if (!scoreChips) scoreChips = '<span style="color:#adb5bd;">점수 없음</span>';
 
         let aromaHtml = '';
         let aromas = notes.aroma || [];
         if (Array.isArray(aromas) && aromas.length > 0) {
-          aromas.forEach(a => { aromaHtml += `<span class="tag">#${a}</span>`; });
+          aromas.forEach(a => { aromaHtml += '<span class="tag">#' + a + '</span>'; });
         } else {
           aromaHtml = '<span style="color:#adb5bd; font-size:12px;">아로마 데이터 없음</span>';
         }
@@ -394,14 +394,14 @@
         
         const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
         const thumbHtml = hasValidImg 
-          ? `<img src="${w.image_url}" class="wine-thumb" alt="label">` 
-          : `<div class="wine-thumb-placeholder">🍷</div>`;
+          ? '<img src="' + w.image_url + '" class="wine-thumb" alt="label">' 
+          : '<div class="wine-thumb-placeholder">🍷</div>';
 
         const detailImgHtml = hasValidImg 
-          ? `<div class="detail-img-box"><img src="${w.image_url}" class="detail-large-img" alt="label"></div>` 
+          ? '<div class="detail-img-box"><img src="' + w.image_url + '" class="detail-large-img" alt="label"></div>' 
           : '';
 
-        const nameEnHtml = w.name_en ? `<div class="wine-name-en">${w.name_en}</div>` : '';
+        const nameEnHtml = w.name_en ? '<div class="wine-name-en">' + w.name_en + '</div>' : '';
 
         const curPriceText = formatPrice(w.purchase_price);
         const curPlaceText = w.purchase_place || '-';
@@ -418,7 +418,7 @@
                 <div class="wine-name">${w.name_ko || '미확인 와인'}</div>
                 ${nameEnHtml}
                 <div class="wine-sub-text">
-                  ${w.country || ''} ❯ ${w.producer \vert{}\vert{} ''}${w.purchase_price ? ` · <b style="color:#800020;">${curPriceText}</b>` : ''}
+                  ${w.country || ''} ❯ ${w.producer \vert{}\vert{} ''}${w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : ''}
                 </div>
               </div>
               <div class="wine-badge-box">
@@ -489,7 +489,7 @@
               <div class="card-actions">
                 <input type="file" id="cardFile_${w.id}" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile('${w.id}', this.files[0])">
                 <label for="cardFile_${w.id}" class="btn-photo-label">📷 라벨 사진 앨범에서 선택</label>
-                <button class="btn-delete" onclick="deleteWine('${w.id}', '${(w.name_ko || '').replace(/'/g, "\\'")}')">🗑️ 삭제</button>
+                <button type="button" class="btn-delete" onclick="deleteWine('${w.id}', '${(w.name_ko || '').replace(/'/g, "\\'")}')">🗑️ 삭제</button>
               </div>
             </div>
           </div>
@@ -500,9 +500,9 @@
     }
 
     function toggleEditMode(wineId, isEdit) {
-      const viewBox = document.getElementById(`viewBox_${wineId}`);
-      const editBox = document.getElementById(`editBox_${wineId}`);
-      const btnEdit = document.getElementById(`btnEdit_${wineId}`);
+      const viewBox = document.getElementById('viewBox_' + wineId);
+      const editBox = document.getElementById('editBox_' + wineId);
+      const btnEdit = document.getElementById('btnEdit_' + wineId);
 
       if (isEdit) {
         viewBox.style.display = 'none';
@@ -516,10 +516,10 @@
     }
 
     async function saveWineMeta(wineId) {
-      const vintageVal = document.getElementById(`inp_vintage_${wineId}`).value.trim();
-      const priceVal = document.getElementById(`inp_price_${wineId}`).value.trim();
-      const placeVal = document.getElementById(`inp_place_${wineId}`).value.trim();
-      const memoVal = document.getElementById(`inp_memo_${wineId}`).value.trim();
+      const vintageVal = document.getElementById('inp_vintage_' + wineId).value.trim();
+      const priceVal = document.getElementById('inp_price_' + wineId).value.trim();
+      const placeVal = document.getElementById('inp_place_' + wineId).value.trim();
+      const memoVal = document.getElementById('inp_memo_' + wineId).value.trim();
 
       const updateData = {
         vintage: vintageVal ? parseInt(vintageVal) : null,
@@ -556,16 +556,16 @@
       }
     }
 
-    // 🗑️ 영구 삭제 함수 (완전한 DB 반영 및 검증)
+    // 🗑️ 영구 삭제 함수
     async function deleteWine(wineId, wineName) {
-      if (!confirm(`'${wineName}'을(를) 셀러에서 완전히 삭제하시겠습니까?`)) return;
+      if (!confirm("'" + wineName + "'을(를) 셀러에서 완전히 삭제하시겠습니까?")) return;
       try {
         const { error } = await sb.from('wines').delete().eq('id', wineId);
         if (error) throw error;
         alert('성공적으로 삭제되었습니다.');
         fetchWines();
       } catch (err) {
-        alert('삭제 실패 (DB 권한 확인 필요): ' + err.message);
+        alert('삭제 실패: ' + err.message);
       }
     }
 
@@ -622,7 +622,7 @@
       if (!files || files.length === 0) return;
       const status = document.getElementById('statusBox');
       status.style.display = 'block';
-      status.innerHTML = `⏳ 사진 ${files.length}장을 안전하게 최적화하고 있습니다...`;
+      status.innerHTML = '⏳ 사진 ' + files.length + '장을 안전하게 최적화하고 있습니다...';
 
       for (let i = 0; i < files.length; i++) {
         try {
@@ -642,7 +642,7 @@
       box.innerHTML = '';
       if (processedImages.length > 0) {
         btn.style.display = 'block';
-        btn.innerText = `선택한 ${processedImages.length}병 분석 및 DB 저장 🚀`;
+        btn.innerText = '선택한 ' + processedImages.length + '병 분석 및 DB 저장 🚀';
       } else {
         btn.style.display = 'none';
       }
@@ -650,7 +650,7 @@
       processedImages.forEach((item, idx) => {
         const wrap = document.createElement('div');
         wrap.className = 'thumb-wrap';
-        wrap.innerHTML = `<img src="${item.dataUrl}"><button class="del-thumb" onclick="removeThumb(${idx})">✕</button>`;
+        wrap.innerHTML = '<img src="' + item.dataUrl + '"><button type="button" class="del-thumb" onclick="removeThumb(' + idx + ')">✕</button>';
         box.appendChild(wrap);
       });
     }
@@ -670,7 +670,7 @@
       btn.style.background = '#868e96';
 
       const total = processedImages.length;
-      let logHtml = `<b>🚀 총 ${total}병 등록 진행 중...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">`;
+      let logHtml = '<b>🚀 총 ' + total + '병 등록 진행 중...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">';
       status.innerHTML = logHtml;
 
       const prompt = `와인 또는 주류 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 다른 부가 텍스트나 백틱(\`\`\`json) 없이 순수 JSON만 반환하세요.
@@ -697,10 +697,10 @@
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + `⏳ [${i + 1}/${total}] Gemini Vision AI로 라벨 분석 중...`;
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini Vision AI로 라벨 분석 중...';
 
         try {
-          const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(GEMINI_API_KEY)}`;
+          const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
           const gRes = await fetch(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -720,11 +720,11 @@
           const gJson = await gRes.json();
 
           if (!gRes.ok || gJson.error) {
-            throw new Error(gJson.error ? gJson.error.message : `API 요청 실패 (HTTP ${gRes.status})`);
+            throw new Error(gJson.error ? gJson.error.message : 'API 요청 실패 (HTTP ' + gRes.status + ')');
           }
 
           if (!gJson.candidates || !gJson.candidates[0] || !gJson.candidates[0].content) {
-            throw new Error("AI 응답에서 유효한 텍스트를 추출하지 못했습니다.");
+            throw new Error('AI 응답에서 유효한 텍스트를 추출하지 못했습니다.');
           }
 
           let rawText = gJson.candidates[0].content.parts[0].text;
@@ -742,9 +742,9 @@
           const { error: insErr } = await sb.from('wines').insert([dbRecord]);
           if (insErr) throw insErr;
 
-          logHtml += `[${i + 1}/${total}] ✅ <b>${parsedData.name_ko}</b> 등록 완료!<br>`;
+          logHtml += '[' + (i + 1) + '/' + total + '] ✅ <b>' + parsedData.name_ko + '</b> 등록 완료!<br>';
         } catch (err) {
-          logHtml += `[${i + 1}/${total}] ❌ 실패: ${err.message}<br>`;
+          logHtml += '[' + (i + 1) + '/' + total + '] ❌ 실패: ' + err.message + '<br>';
         }
         status.innerHTML = logHtml;
       }
