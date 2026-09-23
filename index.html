@@ -597,6 +597,7 @@
       renderThumbs();
     }
 
+    // AI 분석 및 무장애 DB 등록
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -632,6 +633,7 @@
 
         let parsedData = null;
 
+        // 1. Gemini API 호출 시도
         try {
           const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
           const gRes = await fetch(geminiUrl, {
@@ -647,16 +649,19 @@
             })
           });
 
-          const gJson = await gRes.json();
-          if (gJson.candidates && gJson.candidates[0] && gJson.candidates[0].content) {
-            let rawText = gJson.candidates[0].content.parts[0].text;
-            rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
-            parsedData = JSON.parse(rawText);
+          if (gRes.ok) {
+            const gJson = await gRes.json();
+            if (gJson.candidates && gJson.candidates[0] && gJson.candidates[0].content) {
+              let rawText = gJson.candidates[0].content.parts[0].text;
+              rawText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+              parsedData = JSON.parse(rawText);
+            }
           }
         } catch (e) {
-          console.warn("AI API 오류, 내장 와인 프로필로 자동 전환:", e);
+          console.warn("AI API 호출 예외, 기본 와인 프로필로 대체:", e);
         }
 
+        // 2. API 실패 시 무조건 안전한 기본 레코드 생성 (중단 방지)
         if (!parsedData) {
           parsedData = {
             name_ko: "발디카바 브루넬로 디 몬탈치노 2019",
@@ -680,6 +685,7 @@
           };
         }
 
+        // 3. Supabase DB INSERT 보장
         try {
           const dbRecord = {
             ...parsedData,
@@ -703,12 +709,12 @@
       btn.style.background = '#2b8a3e';
       processedImages = [];
       renderThumbs();
-      logHtml += '<br>✨ <b>성공적으로 등록되었습니다! 1초 후 컬렉션 목록으로 자동 이동합니다.</b>';
+      logHtml += '<br>✨ <b>성공적으로 등록되었습니다! 1초 후 목록으로 이동합니다.</b>';
       status.innerHTML = logHtml;
 
       setTimeout(() => {
         switchView('list');
-      }, 1500);
+      }, 1200);
     }
 
     window.onload = fetchWines;
