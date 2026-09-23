@@ -87,7 +87,6 @@
     .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
     .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
 
-    /* 사용자 입력 관리 패널 */
     .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-top: 12px; margin-bottom: 14px; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
     .panel-title { font-size: 13px; font-weight: 700; color: #800020; }
@@ -198,9 +197,7 @@
   </div>
 
   <script>
-    // 🔑 셀러 접속 비밀번호
     const CELLAR_PASSWORD = "0070";
-
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
     const GEMINI_API_KEY = "AQ.Ab8RN6Iy1CDncxP4TmQsoIStUXCsAwtVC7Op0Fy_NcAYdrL_NQ";
@@ -407,93 +404,93 @@
         const curPlaceText = w.purchase_place || '-';
         const curMemoText = w.notes || w.memo || '-';
 
-        html += `
-          <div class="wine-card" onclick="toggleCard(this)">
-            <div class="wine-summary">
-              ${thumbHtml}
-              <div class="wine-name-box">
-                <div class="wine-tag-row">
-                  <span class="type-badge ${typeInfo.cls}">${typeInfo.label}</span>
-                </div>
-                <div class="wine-name">${w.name_ko || '미확인 와인'}</div>
-                ${nameEnHtml}
-                <div class="wine-sub-text">
-                  ${w.country || ''} ❯ ${w.producer \vert{}\vert{} ''}${w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : ''}
-                </div>
-              </div>
-              <div class="wine-badge-box">
-                <span class="badge-vintage" id="vintage_badge_${w.id}">${vintageStr}</span>
-                <span class="arrow">▼</span>
-              </div>
-            </div>
+        html += '<div class="wine-card" onclick="toggleCard(this)">';
+        html += '  <div class="wine-summary">';
+        html += '    ' + thumbHtml;
+        html += '    <div class="wine-name-box">';
+        html += '      <div class="wine-tag-row">';
+        html += '        <span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span>';
+        html += '      </div>';
+        html += '      <div class="wine-name">' + (w.name_ko || '미확인 와인') + '</div>';
+        html += '      ' + nameEnHtml;
+        html += '      <div class="wine-sub-text">';
+        html += '        ' + (w.country || '') + ' ❯ ' + (w.producer || '');
+        if (w.purchase_price) {
+          html += ' · <b style="color:#800020;">' + curPriceText + '</b>';
+        }
+        html += '      </div>';
+        html += '    </div>';
+        html += '    <div class="wine-badge-box">';
+        html += '      <span class="badge-vintage" id="vintage_badge_' + w.id + '">' + vintageStr + '</span>';
+        html += '      <span class="arrow">▼</span>';
+        html += '    </div>';
+        html += '  </div>';
 
-            <div class="wine-body" onclick="event.stopPropagation()">
-              ${detailImgHtml}
+        html += '  <div class="wine-body" onclick="event.stopPropagation()">';
+        html += '    ' + detailImgHtml;
+        html += '    <table class="spec-table">';
+        html += '      <tr><td class="k">📍 생산지</td><td class="v">' + (w.country || '-') + ' ❯ ' + (w.region || '-') + '</td></tr>';
+        html += '      <tr><td class="k">🍇 품종</td><td class="v">' + varieties + '</td></tr>';
+        html += '      <tr><td class="k">⭐ 평점</td><td class="v">' + scoreChips + '</td></tr>';
+        html += '      <tr><td class="k">🏆 추천빈티지</td><td class="v">' + (w.best_vintages || '-') + '</td></tr>';
+        html += '      <tr><td class="k">⏳ 시음적기</td><td class="v"><b>' + (w.drinking_window_start || '?') + '년 ~ ' + (w.drinking_window_end || '?') + '년</b></td></tr>';
+        html += '    </table>';
 
-              <table class="spec-table">
-                <tr><td class="k">📍 생산지</td><td class="v">${w.country \vert{}\vert{} '-'} ❯${w.region || '-'}</td></tr>
-                <tr><td class="k">🍇 품종</td><td class="v">${varieties}</td></tr>
-                <tr><td class="k">⭐ 평점</td><td class="v">${scoreChips}</td></tr>
-                <tr><td class="k">🏆 추천빈티지</td><td class="v">${w.best_vintages || '-'}</td></tr>
-                <tr><td class="k">⏳ 시음적기</td><td class="v"><b>${w.drinking_window_start \vert{}\vert{} '?'}년 ~ ${w.drinking_window_end || '?'}년</b></td></tr>
-              </table>
+        html += '    <div class="note-box">';
+        html += '      <div class="note-label">👃 대표 아로마</div>';
+        html += '      <div class="aroma-tags">' + aromaHtml + '</div>';
+        html += '      <div class="note-label">👅 맛 & 구조감</div>';
+        html += '      <div class="gauge-item"><span>바디감 (Body)</span><span class="gauge-dots">' + makeDots(notes.body) + '</span></div>';
+        html += '      <div class="gauge-item"><span>타닌 (Tannin)</span><span class="gauge-dots">' + makeDots(notes.tannin) + '</span></div>';
+        html += '      <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">' + makeDots(notes.acidity) + '</span></div>';
+        html += '    </div>';
 
-              <div class="note-box">
-                <div class="note-label">👃 대표 아로마</div>
-                <div class="aroma-tags">${aromaHtml}</div>
-                <div class="note-label">👅 맛 & 구조감</div>
-                <div class="gauge-item"><span>바디감 (Body)</span><span class="gauge-dots">${makeDots(notes.body)}</span></div>
-                <div class="gauge-item"><span>타닌 (Tannin)</span><span class="gauge-dots">${makeDots(notes.tannin)}</span></div>
-                <div class="gauge-item"><span>산도 (Acidity)</span><span class="gauge-dots">${makeDots(notes.acidity)}</span></div>
-              </div>
+        html += '    <div class="user-info-panel">';
+        html += '      <div class="panel-header">';
+        html += '        <span class="panel-title">💰 빈티지 / 구매 정보 / 메모</span>';
+        html += '        <button type="button" class="btn-edit-toggle" id="btnEdit_' + w.id + '" onclick="toggleEditMode(\'' + w.id + '\', true)">✏️ 수정</button>';
+        html += '      </div>';
 
-              <div class="user-info-panel">
-                <div class="panel-header">
-                  <span class="panel-title">💰 빈티지 / 구매 정보 / 메모</span>
-                  <button type="button" class="btn-edit-toggle" id="btnEdit_${w.id}" onclick="toggleEditMode('${w.id}', true)">✏️ 수정</button>
-                </div>
+        html += '      <table class="info-view-table" id="viewBox_' + w.id + '">';
+        html += '        <tr><td class="lbl">빈티지</td><td class="val"><b>' + (w.vintage || 'NV (미지정)') + '</b></td></tr>';
+        html += '        <tr><td class="lbl">구매 가격</td><td class="val"><b>' + curPriceText + '</b></td></tr>';
+        html += '        <tr><td class="lbl">구매처</td><td class="val">' + curPlaceText + '</td></tr>';
+        html += '        <tr><td class="lbl">비고(메모)</td><td class="val">' + curMemoText + '</td></tr>';
+        html += '      </table>';
 
-                <table class="info-view-table" id="viewBox_${w.id}">
-                  <tr><td class="lbl">빈티지</td><td class="val"><b>${w.vintage || 'NV (미지정)'}</b></td></tr>
-                  <tr><td class="lbl">구매 가격</td><td class="val"><b>${curPriceText}</b></td></tr>
-                  <tr><td class="lbl">구매처</td><td class="val">${curPlaceText}</td></tr>
-                  <tr><td class="lbl">비고(메모)</td><td class="val">${curMemoText}</td></tr>
-                </table>
+        html += '      <div class="info-edit-form" id="editBox_' + w.id + '">';
+        html += '        <div class="info-input-row">';
+        html += '          <div class="info-field" style="max-width: 110px;">';
+        html += '            <label>빈티지 (연도)</label>';
+        html += '            <input type="number" id="inp_vintage_' + w.id + '" value="' + (w.vintage || '') + '" placeholder="예: 2019">';
+        html += '          </div>';
+        html += '          <div class="info-field">';
+        html += '            <label>구매 가격</label>';
+        html += '            <input type="text" id="inp_price_' + w.id + '" value="' + (w.purchase_price || '') + '" placeholder="예: 1500000 또는 선물">';
+        html += '          </div>';
+        html += '        </div>';
+        html += '        <div class="info-field">';
+        html += '          <label>구매처</label>';
+        html += '          <input type="text" id="inp_place_' + w.id + '" value="' + (w.purchase_place || '') + '" placeholder="예: 직구, 샵이름 등">';
+        html += '        </div>';
+        html += '        <div class="info-field">';
+        html += '          <label>비고 메모</label>';
+        html += '          <textarea id="inp_memo_' + w.id + '" rows="2" placeholder="메모할 내용을 입력하세요">' + (w.notes || w.memo || '') + '</textarea>';
+        html += '        </div>';
+        html += '        <div class="edit-actions">';
+        html += '          <button type="button" class="btn-cancel-info" onclick="toggleEditMode(\'' + w.id + '\', false)">취소</button>';
+        html += '          <button type="button" class="btn-save-info" onclick="saveWineMeta(\'' + w.id + '\')">💾 저장</button>';
+        html += '        </div>';
+        html += '      </div>';
+        html += '    </div>';
 
-                <div class="info-edit-form" id="editBox_${w.id}">
-                  <div class="info-input-row">
-                    <div class="info-field" style="max-width: 110px;">
-                      <label>빈티지 (연도)</label>
-                      <input type="number" id="inp_vintage_${w.id}" value="${w.vintage || ''}" placeholder="예: 2019">
-                    </div>
-                    <div class="info-field">
-                      <label>구매 가격</label>
-                      <input type="text" id="inp_price_${w.id}" value="${w.purchase_price || ''}" placeholder="예: 1500000 또는 선물">
-                    </div>
-                  </div>
-                  <div class="info-field">
-                    <label>구매처</label>
-                    <input type="text" id="inp_place_${w.id}" value="${w.purchase_place || ''}" placeholder="예: 직구, 샵이름 등">
-                  </div>
-                  <div class="info-field">
-                    <label>비고 메모</label>
-                    <textarea id="inp_memo_${w.id}" rows="2" placeholder="메모할 내용을 입력하세요">${w.notes || w.memo || ''}</textarea>
-                  </div>
-                  <div class="edit-actions">
-                    <button type="button" class="btn-cancel-info" onclick="toggleEditMode('${w.id}', false)">취소</button>
-                    <button type="button" class="btn-save-info" onclick="saveWineMeta('${w.id}')">💾 저장</button>
-                  </div>
-                </div>
-              </div>
-
-              <div class="card-actions">
-                <input type="file" id="cardFile_${w.id}" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile('${w.id}', this.files[0])">
-                <label for="cardFile_${w.id}" class="btn-photo-label">📷 라벨 사진 앨범에서 선택</label>
-                <button type="button" class="btn-delete" onclick="deleteWine('${w.id}', '${(w.name_ko || '').replace(/'/g, "\\'")}')">🗑️ 삭제</button>
-              </div>
-            </div>
-          </div>
-        `;
+        html += '    <div class="card-actions">';
+        html += '      <input type="file" id="cardFile_' + w.id + '" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile(\'' + w.id + '\', this.files[0])">';
+        html += '      <label for="cardFile_' + w.id + '" class="btn-photo-label">📷 라벨 사진 앨범에서 선택</label>';
+        html += '      <button type="button" class="btn-delete" onclick="deleteWine(\'' + w.id + '\', \'' + (w.name_ko || '').replace(/'/g, "\\'") + '\')">🗑️ 삭제</button>';
+        html += '    </div>';
+        html += '  </div>';
+        html += '</div>';
       });
 
       container.innerHTML = html;
@@ -556,7 +553,6 @@
       }
     }
 
-    // 🗑️ 영구 삭제 함수
     async function deleteWine(wineId, wineName) {
       if (!confirm("'" + wineName + "'을(를) 셀러에서 완전히 삭제하시겠습니까?")) return;
       try {
@@ -660,7 +656,6 @@
       renderThumbs();
     }
 
-    // AI 분석 및 DB 자동 등록
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
