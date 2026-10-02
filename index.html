@@ -306,12 +306,14 @@
 
       ['ALL', 'Red', 'White', 'Sparkling', 'Dessert'].forEach(t => {
         const chip = document.getElementById('chip-' + t);
-        if (activeFilters.has(t)) {
-          chip.classList.add('checked');
-          chip.querySelector('input').checked = true;
-        } else {
-          chip.classList.remove('checked');
-          chip.querySelector('input').checked = false;
+        if (chip) {
+          if (activeFilters.has(t)) {
+            chip.classList.add('checked');
+            chip.querySelector('input').checked = true;
+          } else {
+            chip.classList.remove('checked');
+            chip.querySelector('input').checked = false;
+          }
         }
       });
 
@@ -321,36 +323,42 @@
     function applyFilterAndSort() {
       const container = document.getElementById('winesContainer');
       const countText = document.getElementById('countText');
-      const sortMode = document.getElementById('sortSelect').value;
+      const sortSelect = document.getElementById('sortSelect');
+      const sortMode = sortSelect ? sortSelect.value : 'name_asc';
 
-      let filtered = allWines.filter(w => {
+      let filtered = (allWines || []).filter(w => {
+        if (!w) return false;
         if (activeFilters.has('ALL')) return true;
         const typeInfo = resolveWineType(w);
         return activeFilters.has(typeInfo.key);
       });
 
       filtered.sort((a, b) => {
+        const nameA = String(a.name_ko || a.name_en || '');
+        const nameB = String(b.name_ko || b.name_en || '');
         if (sortMode === 'name_asc') {
-          return (a.name_ko || '').localeCompare(b.name_ko || '', 'ko');
+          return nameA.localeCompare(nameB, 'ko');
         } else if (sortMode === 'name_desc') {
-          return (b.name_ko || '').localeCompare(a.name_ko || '', 'ko');
+          return nameB.localeCompare(nameA, 'ko');
         } else if (sortMode === 'country_asc') {
-          const cA = a.country || '';
-          const cB = b.country || '';
-          if (cA === cB) return (a.name_ko || '').localeCompare(b.name_ko || '', 'ko');
+          const cA = String(a.country || '');
+          const cB = String(b.country || '');
+          if (cA === cB) return nameA.localeCompare(nameB, 'ko');
           return cA.localeCompare(cB, 'ko');
         } else if (sortMode === 'vintage_desc') {
-          return (b.vintage || 0) - (a.vintage || 0);
+          return (Number(b.vintage) || 0) - (Number(a.vintage) || 0);
         } else if (sortMode === 'vintage_asc') {
-          return (a.vintage || 9999) - (b.vintage || 9999);
+          return (Number(a.vintage) || 9999) - (Number(b.vintage) || 9999);
         }
         return 0;
       });
 
-      countText.innerText = '보관 중인 와인 (' + filtered.length + '병 / 전체 ' + allWines.length + '병)';
+      if (countText) {
+        countText.innerText = '보관 중인 와인 (' + filtered.length + '병 / 전체 ' + allWines.length + '병)';
+      }
 
       if (filtered.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">조건에 맞는 와인이 없습니다.</p>';
+        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">등록된 와인이 없거나 조건에 맞는 와인이 없습니다.<br><small style="color:#adb5bd;">새 라벨 등록 탭에서 와인을 추가해 보세요.</small></p>';
         return;
       }
 
@@ -366,8 +374,10 @@
         }
 
         let scoreChips = '';
-        for (let k in scores) {
-          scoreChips += '<span class="score-chip">' + k + ' ' + scores[k] + '</span>';
+        if (scores && typeof scores === 'object') {
+          for (let k in scores) {
+            scoreChips += '<span class="score-chip">' + k + ' ' + scores[k] + '</span>';
+          }
         }
         if (!scoreChips) scoreChips = '<span style="color:#adb5bd;">점수 없음</span>';
 
@@ -383,7 +393,7 @@
         if (Array.isArray(w.grape_varieties)) {
           varieties = w.grape_varieties.join(', ');
         } else if (w.grape_varieties) {
-          varieties = w.grape_varieties;
+          varieties = String(w.grape_varieties);
         }
 
         const typeInfo = resolveWineType(w);
@@ -411,7 +421,7 @@
         html += '      <div class="wine-tag-row">';
         html += '        <span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span>';
         html += '      </div>';
-        html += '      <div class="wine-name">' + (w.name_ko || '미확인 와인') + '</div>';
+        html += '      <div class="wine-name">' + (w.name_ko || w.name_en || '이름 미지정') + '</div>';
         html += '      ' + nameEnHtml;
         html += '      <div class="wine-sub-text">';
         html += '        ' + (w.country || '') + ' ❯ ' + (w.producer || '');
@@ -448,7 +458,7 @@
         html += '    <div class="user-info-panel">';
         html += '      <div class="panel-header">';
         html += '        <span class="panel-title">💰 빈티지 / 구매 정보 / 메모</span>';
-        html += '        <button type="button" class="btn-edit-toggle" id="btnEdit_' + w.id + '" onclick="toggleEditMode(\'' + w.id + '\', true)">✏️ 수정</button>';
+        html += '        <button type="button" class="btn-edit-toggle" id="btnEdit_' + w.id + '" onclick="toggleEditMode(\'' + w.id + '\', true)">✏️️ 수정</button>';
         html += '      </div>';
 
         html += '      <table class="info-view-table" id="viewBox_' + w.id + '">';
@@ -487,7 +497,7 @@
         html += '    <div class="card-actions">';
         html += '      <input type="file" id="cardFile_' + w.id + '" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile(\'' + w.id + '\', this.files[0])">';
         html += '      <label for="cardFile_' + w.id + '" class="btn-photo-label">📷 라벨 사진 앨범에서 선택</label>';
-        html += '      <button type="button" class="btn-delete" onclick="deleteWine(\'' + w.id + '\', \'' + (w.name_ko || '').replace(/'/g, "\\'") + '\')">🗑️ 삭제</button>';
+        html += '      <button type="button" class="btn-delete" onclick="deleteWine(\'' + w.id + '\', \'' + (w.name_ko || w.name_en || '').replace(/'/g, "\\'") + '\')">🗑️ 삭제</button>';
         html += '    </div>';
         html += '  </div>';
         html += '</div>';
@@ -567,19 +577,18 @@
 
     async function fetchWines() {
       const container = document.getElementById('winesContainer');
-      container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">목록을 불러오는 중...</p>';
+      container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">데이터를 조회하고 있습니다...</p>';
 
       try {
         const { data: wines, error } = await sb
           .from('wines')
-          .select('*')
-          .order('name_ko', { ascending: true });
+          .select('*');
 
         if (error) throw error;
         allWines = wines || [];
         applyFilterAndSort();
       } catch (err) {
-        container.innerHTML = '<p style="text-align: center; color: #fa5252; padding: 40px;">목록을 불러오지 못했습니다.<br>' + err.message + '</p>';
+        container.innerHTML = '<p style="text-align: center; color: #fa5252; padding: 40px;">목록을 불러오지 못했습니다.<br><small>' + (err.message || err) + '</small></p>';
       }
     }
 
