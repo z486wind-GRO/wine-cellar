@@ -9,7 +9,6 @@
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; padding: 14px; color: #1a1a1a; }
     
-    /* 🔒 보안 로그인 게이트 */
     #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #212529; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; }
     .auth-card { background: #fff; border-radius: 16px; padding: 30px 24px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
     .auth-title { font-size: 22px; font-weight: 800; color: #800020; margin-bottom: 8px; }
@@ -19,7 +18,6 @@
     .auth-btn { width: 100%; padding: 14px; background: #800020; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
     .auth-error { color: #e03131; font-size: 13px; font-weight: 600; margin-top: 10px; display: none; }
 
-    /* 메인 앱 영역 */
     #mainApp { display: none; }
 
     .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
@@ -189,8 +187,8 @@
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
     
-    // 💡 Google AI Studio에서 발급받은 'AIzaSy...' 형태의 키를 넣어주세요.
-    const GEMINI_API_KEY = "AQ.Ab8RN6Iy1CDncxP4TmQsoIStUXCsAwtVC7Op0Fy_NcAYdrL_NQ";
+    // 🔑 사용자 발급 최신 유효 키
+    const GEMINI_API_KEY = "AQ.Ab8RN6JjU8vt5ZylMZh1N6ywF3MRiK3XtLsA5ADJp2D1_byekg";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let allWines = [];
@@ -502,6 +500,36 @@
       renderThumbs();
     }
 
+    // 🚀 구글 공식 최신 모델 식별자 (gemini-3.8-flash) 직접 호출
+    async function callGeminiVision(base64Data, promptText) {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-goog-api-key': GEMINI_API_KEY
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: promptText },
+              { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+            ]
+          }],
+          generationConfig: { responseMimeType: "application/json" }
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error ? data.error.message : ('HTTP ' + res.status));
+      }
+      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+        throw new Error('AI 분석 결과가 비어 있습니다.');
+      }
+      return data.candidates[0].content.parts[0].text;
+    }
+
     // AI 분석 및 DB 자동 등록
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
@@ -513,10 +541,10 @@
       let logHtml = '<b>총 ' + total + '병 분석 및 등록 진행...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">';
       status.innerHTML = logHtml;
 
-      const prompt = `와인 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 백틱(\`\`\`json)이나 다른 설명 없이 순수 JSON만 반환하세요.
+      const prompt = `와인 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 백틱이나 부가 설명 없이 순수 JSON 문자열만 출력하세요.
 {
-  "name_ko": "라벨에 표기된 한국어 정식 명칭 (예: 비비 그라에츠 테스타마타 2022)",
-  "name_en": "라벨에 표기된 원어/영어 명칭 (예: Bibi Graetz Testamatta 2022)",
+  "name_ko": "라벨에 표기된 한국어 정식 명칭 (연도 포함)",
+  "name_en": "라벨에 표기된 원어/영어 명칭",
   "wine_type": "Red/White/Sparkling/Dessert 중 택1",
   "country": "생산 국가",
   "region": "세부 생산지",
@@ -537,37 +565,12 @@
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI 라벨 판독 중...';
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini 3.8 Flash 라벨 분석 중...';
 
         try {
-          const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
-          const gRes = await fetch(geminiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [
-                  { text: prompt },
-                  { inlineData: { mimeType: "image/jpeg", data: item.base64 } }
-                ]
-              }],
-              generationConfig: { responseMimeType: "application/json" }
-            })
-          });
-
-          const gJson = await gRes.json();
-
-          if (!gRes.ok || gJson.error) {
-            throw new Error(gJson.error ? gJson.error.message : ('HTTP ' + gRes.status));
-          }
-
-          if (!gJson.candidates || !gJson.candidates[0] || !gJson.candidates[0].content) {
-            throw new Error('AI가 라벨 내용을 추출하지 못했습니다.');
-          }
-
-          let rawText = gJson.candidates[0].content.parts[0].text;
-          rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
-          const parsedData = JSON.parse(rawText);
+          const rawResult = await callGeminiVision(item.base64, prompt);
+          const cleanJson = rawResult.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsedData = JSON.parse(cleanJson);
 
           const dbRecord = {
             ...parsedData,
