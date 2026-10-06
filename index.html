@@ -188,6 +188,8 @@
     const CELLAR_PASSWORD = "0070";
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
+    
+    // 💡 Google AI Studio에서 발급받은 'AIzaSy...' 형태의 키를 넣어주세요.
     const GEMINI_API_KEY = "AQ.Ab8RN6Iy1CDncxP4TmQsoIStUXCsAwtVC7Op0Fy_NcAYdrL_NQ";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -203,9 +205,7 @@
       if (pin === CELLAR_PASSWORD) {
         try {
           localStorage.setItem('cellar_auth_token', 'valid');
-        } catch (e) {
-          console.warn('localStorage 저장 실패(시크릿 모드 등):', e);
-        }
+        } catch (e) {}
         unlockUI();
       } else {
         if (errEl) errEl.style.display = 'block';
@@ -502,6 +502,7 @@
       renderThumbs();
     }
 
+    // AI 분석 및 DB 자동 등록
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -509,39 +510,87 @@
       status.style.display = 'block';
       btn.disabled = true;
       const total = processedImages.length;
-      let logHtml = '<b>총 ' + total + '병 등록 중...</b><br>';
+      let logHtml = '<b>총 ' + total + '병 분석 및 등록 진행...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">';
       status.innerHTML = logHtml;
 
-      const prompt = `와인 라벨을 분석해 순수 JSON만 반환하세요: {"name_ko":"국문명","name_en":"영문명","wine_type":"Red","country":"국가","region":"지역","producer":"생산자","grape_varieties":["품종"],"vintage":2020,"best_vintages":"-","expert_scores":{},"tasting_notes":{"aroma":["아로마"],"body":4,"tannin":4,"acidity":3},"drinking_window_start":2025,"drinking_window_end":2035}`;
+      const prompt = `와인 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 백틱(\`\`\`json)이나 다른 설명 없이 순수 JSON만 반환하세요.
+{
+  "name_ko": "라벨에 표기된 한국어 정식 명칭 (예: 비비 그라에츠 테스타마타 2022)",
+  "name_en": "라벨에 표기된 원어/영어 명칭 (예: Bibi Graetz Testamatta 2022)",
+  "wine_type": "Red/White/Sparkling/Dessert 중 택1",
+  "country": "생산 국가",
+  "region": "세부 생산지",
+  "producer": "생산자",
+  "grape_varieties": ["품종"],
+  "vintage": 2022,
+  "best_vintages": "추천 빈티지",
+  "expert_scores": {},
+  "tasting_notes": {
+    "aroma": ["아로마1", "아로마2", "아로마3"],
+    "body": 4,
+    "tannin": 4,
+    "acidity": 4
+  },
+  "drinking_window_start": 2026,
+  "drinking_window_end": 2045
+}`;
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 분석 및 등록 중...';
-        let parsed = null;
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI 라벨 판독 중...';
+
         try {
-          const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
-          const res = await fetch(url, {
+          const geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' + encodeURIComponent(GEMINI_API_KEY);
+          const gRes = await fetch(geminiUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }, { inlineData: { mimeType: "image/jpeg", data: item.base64 } }] }], generationConfig: { responseMimeType: "application/json" } })
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: prompt },
+                  { inlineData: { mimeType: "image/jpeg", data: item.base64 } }
+                ]
+              }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
           });
-          const d = await res.json();
-          if (d.candidates && d.candidates[0]) {
-            parsed = JSON.parse(d.candidates[0].content.parts[0].text);
+
+          const gJson = await gRes.json();
+
+          if (!gRes.ok || gJson.error) {
+            throw new Error(gJson.error ? gJson.error.message : ('HTTP ' + gRes.status));
           }
-        } catch (e) { console.warn(e); }
 
-        if (!parsed) parsed = { name_ko: "신규 등록 와인", name_en: "New Wine", wine_type: "Red", country: "미지정", region: "미지정", producer: "미지정", grape_varieties: ["품종 미지정"], vintage: null, best_vintages: "-", expert_scores: {}, tasting_notes: { aroma: ["과실"], body: 3, tannin: 3, acidity: 3 }, drinking_window_start: null, drinking_window_end: null };
+          if (!gJson.candidates || !gJson.candidates[0] || !gJson.candidates[0].content) {
+            throw new Error('AI가 라벨 내용을 추출하지 못했습니다.');
+          }
 
-        const { error } = await sb.from('wines').insert([{ ...parsed, image_url: item.dataUrl, is_stored: true, is_tasted: false, status: 'confirmed' }]);
-        logHtml += '[' + (i + 1) + '/' + total + '] ' + (error ? '❌ 실패' : '✅ <b>' + parsed.name_ko + '</b> 완료') + '<br>';
+          let rawText = gJson.candidates[0].content.parts[0].text;
+          rawText = rawText.replace(/```json/gi, '').replace(/```/g, '').trim();
+          const parsedData = JSON.parse(rawText);
+
+          const dbRecord = {
+            ...parsedData,
+            image_url: item.dataUrl,
+            is_stored: true,
+            is_tasted: false,
+            status: 'confirmed'
+          };
+
+          const { error: insErr } = await sb.from('wines').insert([dbRecord]);
+          if (insErr) throw insErr;
+
+          logHtml += '[' + (i + 1) + '/' + total + '] ✅ <b>' + parsedData.name_ko + '</b> 등록 완료!<br>';
+        } catch (err) {
+          logHtml += '[' + (i + 1) + '/' + total + '] ❌ 실패: ' + err.message + '<br>';
+        }
         status.innerHTML = logHtml;
       }
 
       btn.disabled = false;
       processedImages = [];
       renderThumbs();
-      setTimeout(() => switchView('list'), 1200);
+      status.innerHTML = logHtml;
     }
   </script>
 </body>
