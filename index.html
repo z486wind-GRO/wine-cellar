@@ -186,8 +186,6 @@
     const CELLAR_PASSWORD = "0070";
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
-    
-    // 🔑 사용자 발급 최신 유효 키
     const GEMINI_API_KEY = "AQ.Ab8RN6JjU8vt5ZylMZh1N6ywF3MRiK3XtLsA5ADJp2D1_byekg";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -500,34 +498,57 @@
       renderThumbs();
     }
 
-    // 🚀 구글 공식 최신 모델 식별자 (gemini-3.8-flash) 직접 호출
-    async function callGeminiVision(base64Data, promptText) {
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': GEMINI_API_KEY
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: promptText },
-              { inlineData: { mimeType: "image/jpeg", data: base64Data } }
-            ]
-          }],
-          generationConfig: { responseMimeType: "application/json" }
-        })
-      });
+    // 💡 503 과부하 에러 시 자동 지수 백오프 재시도 (최대 3회)
+    async function executeWithRetry(modelName, base64Data, promptText, onRetryStatus) {
+      const maxRetries = 3;
+      let delayMs = 1200; // 1.2초부터 시작
 
-      const data = await res.json();
-      if (!res.ok || data.error) {
-        throw new Error(data.error ? data.error.message : ('HTTP ' + res.status));
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent';
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': GEMINI_API_KEY
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [
+                  { text: promptText },
+                  { inlineData: { mimeType: "image/jpeg", data: base64Data } }
+                ]
+              }],
+              generationConfig: { responseMimeType: "application/json" }
+            })
+          });
+
+          const data = await res.json();
+
+          // 503 High Demand 에러 감지 시 즉시 포기하지 않고 지연 후 재시도
+          if (res.status === 503 || (data.error && data.error.message && data.error.message.includes('high demand'))) {
+            if (attempt < maxRetries) {
+              if (onRetryStatus) onRetryStatus(attempt, maxRetries, Math.round(delayMs / 1000));
+              await new Promise(r => setTimeout(r, delayMs));
+              delayMs *= 2; // 지수 백오프: 1.2초 -> 2.4초
+              continue;
+            }
+          }
+
+          if (!res.ok || data.error) {
+            throw new Error(data.error ? data.error.message : ('HTTP ' + res.status));
+          }
+
+          if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+          }
+          throw new Error('AI 분석 결과 데이터가 비어 있습니다.');
+        } catch (err) {
+          if (attempt === maxRetries) throw err;
+          await new Promise(r => setTimeout(r, delayMs));
+          delayMs *= 2;
+        }
       }
-      if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-        throw new Error('AI 분석 결과가 비어 있습니다.');
-      }
-      return data.candidates[0].content.parts[0].text;
     }
 
     // AI 분석 및 DB 자동 등록
@@ -565,10 +586,13 @@
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini 3.8 Flash 라벨 분석 중...';
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI 라벨 분석 중...';
 
         try {
-          const rawResult = await callGeminiVision(item.base64, prompt);
+          const rawResult = await executeWithRetry('gemini-3.8-flash', item.base64, prompt, (att, maxAtt, sec) => {
+            status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 구글 서버 과부하 감지: ' + sec + '초 후 자동 재시도 (' + att + '/' + maxAtt + ')...';
+          });
+
           const cleanJson = rawResult.replace(/```json/gi, '').replace(/```/g, '').trim();
           const parsedData = JSON.parse(cleanJson);
 
