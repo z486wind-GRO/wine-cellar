@@ -186,7 +186,9 @@
     const CELLAR_PASSWORD = "0070";
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
-    const GEMINI_API_KEY = "AQ.Ab8RN6JjU8vt5ZylMZh1N6ywF3MRiK3XtLsA5ADJp2D1_byekg";
+    
+    // 🔑 방금 생성하신 Wine-cellar 신규 프로젝트 API 키
+    const GEMINI_API_KEY = "AQ.Ab8RN6KSMH5E4ZNCMeO6AVC35Q1lCCyz1jywl6I70qD9f8jCwg";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let allWines = [];
@@ -498,10 +500,10 @@
       renderThumbs();
     }
 
-    // 💡 503 과부하 에러 시 자동 지수 백오프 재시도 (최대 3회)
+    // 💡 503 일시적 과부하 시 자동 재시도 (최대 3회)
     async function executeWithRetry(modelName, base64Data, promptText, onRetryStatus) {
       const maxRetries = 3;
-      let delayMs = 1200; // 1.2초부터 시작
+      let delayMs = 1200;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -525,12 +527,11 @@
 
           const data = await res.json();
 
-          // 503 High Demand 에러 감지 시 즉시 포기하지 않고 지연 후 재시도
           if (res.status === 503 || (data.error && data.error.message && data.error.message.includes('high demand'))) {
             if (attempt < maxRetries) {
               if (onRetryStatus) onRetryStatus(attempt, maxRetries, Math.round(delayMs / 1000));
               await new Promise(r => setTimeout(r, delayMs));
-              delayMs *= 2; // 지수 백오프: 1.2초 -> 2.4초
+              delayMs *= 2;
               continue;
             }
           }
@@ -590,7 +591,7 @@
 
         try {
           const rawResult = await executeWithRetry('gemini-3.8-flash', item.base64, prompt, (att, maxAtt, sec) => {
-            status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 구글 서버 과부하 감지: ' + sec + '초 후 자동 재시도 (' + att + '/' + maxAtt + ')...';
+            status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 구글 서버 지연 감지: ' + sec + '초 후 자동 재시도 (' + att + '/' + maxAtt + ')...';
           });
 
           const cleanJson = rawResult.replace(/```json/gi, '').replace(/```/g, '').trim();
