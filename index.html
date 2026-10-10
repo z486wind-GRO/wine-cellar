@@ -21,7 +21,8 @@
     #mainApp { display: none; }
 
     .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .logout-btn { background: #e9ecef; border: 1px solid #ced4da; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #495057; cursor: pointer; }
+    .header-btns { display: flex; gap: 6px; }
+    .header-btn { background: #e9ecef; border: 1px solid #ced4da; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #495057; cursor: pointer; }
 
     .tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
     .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; background: #e4e7eb; color: #495057; cursor: pointer; }
@@ -131,7 +132,10 @@
   <div id="mainApp">
     <div class="top-header">
       <span style="font-weight: 800; font-size: 16px; color: #800020;">🍷 My Private Cellar</span>
-      <button type="button" class="logout-btn" onclick="lockCellar()">🔒 셀러 잠금</button>
+      <div class="header-btns">
+        <button type="button" class="header-btn" onclick="setupApiKey()">🔑 키 설정</button>
+        <button type="button" class="header-btn" onclick="lockCellar()">🔒 잠금</button>
+      </div>
     </div>
 
     <div class="tab-bar">
@@ -186,14 +190,25 @@
     const CELLAR_PASSWORD = "0070";
     const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
-    
-    // 🔑 방금 생성하신 Wine-cellar 신규 프로젝트 API 키
-    const GEMINI_API_KEY = "AQ.Ab8RN6KSMH5E4ZNCMeO6AVC35Q1lCCyz1jywl6I70qD9f8jCwg";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
     let allWines = [];
     let processedImages = [];
     let activeFilters = new Set(['ALL']);
+
+    // 💡 키를 브라우저 로컬 스토리지에서 안전하게 읽기
+    function getApiKey() {
+      return localStorage.getItem('cellar_gemini_key') || '';
+    }
+
+    function setupApiKey() {
+      const current = getApiKey();
+      const input = prompt("Google Gemini API 키를 입력해 주세요 (스마트폰/PC 브라우저에만 안전하게 보관됩니다):", current);
+      if (input !== null && input.trim() !== "") {
+        localStorage.setItem('cellar_gemini_key', input.trim());
+        alert("API 키가 안전하게 저장되었습니다!");
+      }
+    }
 
     function checkAuth() {
       const inputEl = document.getElementById('pinInput');
@@ -500,8 +515,13 @@
       renderThumbs();
     }
 
-    // 💡 503 일시적 과부하 시 자동 재시도 (최대 3회)
+    // 💡 503 과부하 지수 백오프 자동 재시도 (최대 3회)
     async function executeWithRetry(modelName, base64Data, promptText, onRetryStatus) {
+      const apiKey = getApiKey();
+      if (!apiKey) {
+        throw new Error('API 키가 설정되지 않았습니다. 상단 우측의 [🔑 키 설정] 버튼을 눌러 API 키를 먼저 등록해 주세요.');
+      }
+
       const maxRetries = 3;
       let delayMs = 1200;
 
@@ -512,7 +532,7 @@
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'x-goog-api-key': GEMINI_API_KEY
+              'x-goog-api-key': apiKey
             },
             body: JSON.stringify({
               contents: [{
