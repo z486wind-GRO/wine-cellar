@@ -53,6 +53,8 @@
     .type-sparkling { background: #fff3bf; color: #d9480f; }
     .type-dessert { background: #f3d9fa; color: #862e9c; }
 
+    .warn-badge { background: #fff3bf; color: #d9480f; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; border: 1px solid #ffe066; }
+
     .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 3px; }
     .wine-name-en { font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 4px; }
     .wine-sub-text { font-size: 11px; color: #868e96; }
@@ -71,20 +73,12 @@
     .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
     .spec-table td { padding: 5px 0; }
     .spec-table td.k { color: #868e96; width: 85px; font-weight: 600; }
-
-    .score-chip { display: inline-block; background: #fff3bf; color: #d9480f; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 12px; margin-right: 4px; }
-    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-    .note-label { font-size: 12px; font-weight: 700; color: #495057; margin-bottom: 6px; }
-    .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-    .tag { background: #e7f5ff; color: #1971c2; font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
-
-    .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
-    .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
+    .val-check { color: #d9480f; font-weight: 700; }
 
     .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
     .panel-title { font-size: 13px; font-weight: 700; color: #800020; }
-    .btn-edit-toggle { background: #e9ecef; color: #495057; border: none; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .btn-edit-toggle { background: #800020; color: #fff; border: none; padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
 
     .info-view-table { width: 100%; border-collapse: collapse; font-size: 13px; }
     .info-view-table td { padding: 4px 0; }
@@ -94,7 +88,7 @@
     .info-input-row { display: flex; gap: 8px; }
     .info-field { flex: 1; display: flex; flex-direction: column; gap: 3px; }
     .info-field label { font-size: 11px; font-weight: 700; color: #6c757d; }
-    .info-field input, .info-field textarea { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; }
+    .info-field input, .info-field textarea, .info-field select { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; }
 
     .edit-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
     .btn-save-info { background: #800020; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -175,13 +169,13 @@
 
     <div id="tabUploadSection">
       <h3 style="margin-bottom: 6px; font-size: 18px;">와인/주류 라벨 추가</h3>
-      <p style="font-size: 13px; color: #6c757d; margin-bottom: 14px;">라벨 사진을 등록하면 자동 분석 후 저장됩니다.</p>
+      <p style="font-size: 13px; color: #6c757d; margin-bottom: 14px;">라벨에 인쇄된 텍스트만 추출합니다. (추론 불가 항목은 '확인 필요'로 저장)</p>
       <input type="file" id="directAlbumIn" accept="image/jpeg, image/png, image/webp" multiple style="display:none;" onchange="handleIncomingFiles(this.files)">
       <label for="directAlbumIn" class="btn-direct-label btn-album">🖼️ 갤러리에서 사진 선택</label>
       <input type="file" id="directCamIn" accept="image/jpeg, image/png" capture="camera" style="display:none;" onchange="handleIncomingFiles(this.files)">
       <label for="directCamIn" class="btn-direct-label btn-cam">📷 카메라로 바로 촬영</label>
       <div id="previewBox"></div>
-      <button type="button" id="startBtn" class="btn-run" onclick="analyzeAndSave()">AI 분석 및 DB 등록 🚀</button>
+      <button type="button" id="startBtn" class="btn-run" onclick="analyzeAndSave()">AI 팩트 추출 및 등록 🚀</button>
       <div id="statusBox"></div>
     </div>
   </div>
@@ -196,17 +190,16 @@
     let processedImages = [];
     let activeFilters = new Set(['ALL']);
 
-    // 💡 키를 브라우저 로컬 스토리지에서 안전하게 읽기
     function getApiKey() {
       return localStorage.getItem('cellar_gemini_key') || '';
     }
 
     function setupApiKey() {
       const current = getApiKey();
-      const input = prompt("Google Gemini API 키를 입력해 주세요 (스마트폰/PC 브라우저에만 안전하게 보관됩니다):", current);
+      const input = prompt("Google Gemini API 키를 입력해 주세요:", current);
       if (input !== null && input.trim() !== "") {
         localStorage.setItem('cellar_gemini_key', input.trim());
-        alert("API 키가 안전하게 저장되었습니다!");
+        alert("API 키가 저장되었습니다!");
       }
     }
 
@@ -216,9 +209,7 @@
       const pin = inputEl ? inputEl.value.trim() : '';
 
       if (pin === CELLAR_PASSWORD) {
-        try {
-          localStorage.setItem('cellar_auth_token', 'valid');
-        } catch (e) {}
+        try { localStorage.setItem('cellar_auth_token', 'valid'); } catch (e) {}
         unlockUI();
       } else {
         if (errEl) errEl.style.display = 'block';
@@ -234,25 +225,17 @@
     }
 
     function lockCellar() {
-      try {
-        localStorage.removeItem('cellar_auth_token');
-      } catch (e) {}
+      try { localStorage.removeItem('cellar_auth_token'); } catch (e) {}
       location.reload();
     }
 
     window.onload = function() {
       let isAuthed = false;
-      try {
-        isAuthed = (localStorage.getItem('cellar_auth_token') === 'valid');
-      } catch (e) {}
-
-      if (isAuthed) {
-        unlockUI();
-      } else {
-        const overlay = document.getElementById('authOverlay');
-        const main = document.getElementById('mainApp');
-        if (overlay) overlay.style.display = 'flex';
-        if (main) main.style.display = 'none';
+      try { isAuthed = (localStorage.getItem('cellar_auth_token') === 'valid'); } catch (e) {}
+      if (isAuthed) unlockUI();
+      else {
+        document.getElementById('authOverlay').style.display = 'flex';
+        document.getElementById('mainApp').style.display = 'none';
       }
     };
 
@@ -275,19 +258,11 @@
       card.classList.toggle('active');
     }
 
-    function makeDots(val) {
-      let n = parseInt(val) || 0;
-      if (n < 0) n = 0;
-      if (n > 5) n = 5;
-      return "●".repeat(n) + "○".repeat(5 - n);
-    }
-
     function resolveWineType(w) {
-      const name = ((w.name_ko || '') + ' ' + (w.name_en || '')).toLowerCase();
-      const raw = (w.wine_type || '').toLowerCase();
-      if (name.includes('샴페인') || name.includes('champagne') || raw.includes('sparkling')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
-      if (name.includes('소테른') || name.includes('sauternes') || raw.includes('dessert')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
-      if (name.includes('샤르도네') || name.includes('chardonnay') || name.includes('소비뇽') || raw.includes('white')) return { key: 'White', label: '화이트', cls: 'type-white' };
+      const raw = String(w.wine_type || '').trim().toLowerCase();
+      if (raw === 'sparkling' || raw.includes('스파클링')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
+      if (raw === 'dessert' || raw.includes('디저트')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
+      if (raw === 'white' || raw.includes('화이트')) return { key: 'White', label: '화이트', cls: 'type-white' };
       return { key: 'Red', label: '레드', cls: 'type-red' };
     }
 
@@ -348,18 +323,6 @@
 
       let html = '';
       filtered.forEach(w => {
-        let notes = typeof w.tasting_notes === 'string' ? JSON.parse(w.tasting_notes || '{}') : (w.tasting_notes || {});
-        let scores = typeof w.expert_scores === 'string' ? JSON.parse(w.expert_scores || '{}') : (w.expert_scores || {});
-        let scoreChips = '';
-        for (let k in scores) scoreChips += '<span class="score-chip">' + k + ' ' + scores[k] + '</span>';
-        if (!scoreChips) scoreChips = '<span style="color:#adb5bd;">점수 없음</span>';
-
-        let aromaHtml = '';
-        let aromas = notes.aroma || [];
-        if (Array.isArray(aromas) && aromas.length > 0) aromas.forEach(a => { aromaHtml += '<span class="tag">#' + a + '</span>'; });
-        else aromaHtml = '<span style="color:#adb5bd; font-size:12px;">아로마 데이터 없음</span>';
-
-        let varieties = Array.isArray(w.grape_varieties) ? w.grape_varieties.join(', ') : (w.grape_varieties || '-');
         const typeInfo = resolveWineType(w);
         const vintageStr = w.vintage ? w.vintage : 'NV';
         const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
@@ -367,53 +330,73 @@
         const detailImgHtml = hasValidImg ? '<div class="detail-img-box"><img src="' + w.image_url + '" class="detail-large-img" alt="label"></div>' : '';
         const curPriceText = formatPrice(w.purchase_price);
 
+        let varieties = Array.isArray(w.grape_varieties) ? w.grape_varieties.join(', ') : (w.grape_varieties || '확인 필요');
+        const isCheckNeeded = (w.country === '확인 필요' || varieties === '확인 필요' || !w.vintage);
+
         html += '<div class="wine-card" onclick="toggleCard(this)">';
         html += '  <div class="wine-summary">' + thumbHtml;
         html += '    <div class="wine-name-box">';
-        html += '      <div class="wine-tag-row"><span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span></div>';
-        html += '      <div class="wine-name">' + (w.name_ko || w.name_en || '이름 미지정') + '</div>';
+        html += '      <div class="wine-tag-row">';
+        html += '        <span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span>';
+        if (isCheckNeeded) html += '<span class="warn-badge">⚠️ 확인 필요</span>';
+        html += '      </div>';
+        html += '      <div class="wine-name">' + (w.name_ko || w.name_en || '이름 확인 필요') + '</div>';
         if (w.name_en) html += '<div class="wine-name-en">' + w.name_en + '</div>';
-        html += '      <div class="wine-sub-text">' + (w.country || '') + ' ❯ ' + (w.producer || '') + (w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : '') + '</div>';
+        html += '      <div class="wine-sub-text">' + (w.country || '국가 확인 필요') + ' ❯ ' + (w.producer || '생산자 확인 필요') + (w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : '') + '</div>';
         html += '    </div>';
         html += '    <div class="wine-badge-box"><span class="badge-vintage">' + vintageStr + '</span><span class="arrow">▼</span></div>';
         html += '  </div>';
         html += '  <div class="wine-body" onclick="event.stopPropagation()">';
         html += '    ' + detailImgHtml;
         html += '    <table class="spec-table">';
-        html += '      <tr><td class="k">📍 생산지</td><td>' + (w.country || '-') + ' ❯ ' + (w.region || '-') + '</td></tr>';
-        html += '      <tr><td class="k">🍇 품종</td><td>' + varieties + '</td></tr>';
-        html += '      <tr><td class="k">⭐ 평점</td><td>' + scoreChips + '</td></tr>';
-        html += '      <tr><td class="k">🏆 추천빈티지</td><td>' + (w.best_vintages || '-') + '</td></tr>';
-        html += '      <tr><td class="k">⏳ 시음적기</td><td><b>' + (w.drinking_window_start || '?') + '년 ~ ' + (w.drinking_window_end || '?') + '년</b></td></tr>';
+        html += '      <tr><td class="k">📍 생산지</td><td>' + (w.country || '<span class="val-check">확인 필요</span>') + ' ❯ ' + (w.region || '<span class="val-check">확인 필요</span>') + '</td></tr>';
+        html += '      <tr><td class="k">🍇 품종</td><td>' + (varieties.includes('확인 필요') ? '<span class="val-check">확인 필요</span>' : varieties) + '</td></tr>';
+        html += '      <tr><td class="k">🏭 생산자</td><td>' + (w.producer || '<span class="val-check">확인 필요</span>') + '</td></tr>';
         html += '    </table>';
-        html += '    <div class="note-box">';
-        html += '      <div class="note-label">👃 대표 아로마</div><div class="aroma-tags">' + aromaHtml + '</div>';
-        html += '      <div class="note-label">👅 맛 & 구조감</div>';
-        html += '      <div class="gauge-item"><span>바디감</span><span class="gauge-dots">' + makeDots(notes.body) + '</span></div>';
-        html += '      <div class="gauge-item"><span>타닌</span><span class="gauge-dots">' + makeDots(notes.tannin) + '</span></div>';
-        html += '      <div class="gauge-item"><span>산도</span><span class="gauge-dots">' + makeDots(notes.acidity) + '</span></div>';
-        html += '    </div>';
         html += '    <div class="user-info-panel">';
-        html += '      <div class="panel-header"><span class="panel-title">💰 정보 / 메모</span><button type="button" class="btn-edit-toggle" onclick="toggleEditMode(\'' + w.id + '\', true)">✏️ 수정</button></div>';
+        html += '      <div class="panel-header"><span class="panel-title">✏️ 상세 데이터 직접 수정</span><button type="button" class="btn-edit-toggle" onclick="toggleEditMode(\'' + w.id + '\', true)">수정하기</button></div>';
         html += '      <table class="info-view-table" id="viewBox_' + w.id + '">';
-        html += '        <tr><td class="lbl">빈티지</td><td><b>' + (w.vintage || 'NV') + '</b></td></tr>';
+        html += '        <tr><td class="lbl">타입</td><td><b>' + typeInfo.label + '</b></td></tr>';
+        html += '        <tr><td class="lbl">빈티지</td><td><b>' + (w.vintage || 'NV (미지정)') + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매 가격</td><td><b>' + curPriceText + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매처</td><td>' + (w.purchase_place || '-') + '</td></tr>';
-        html += '        <tr><td class="lbl">비고(메모)</td><td>' + (w.notes || '-') + '</td></tr>';
+        html += '        <tr><td class="lbl">메모</td><td>' + (w.notes || '-') + '</td></tr>';
         html += '      </table>';
         html += '      <div class="info-edit-form" id="editBox_' + w.id + '">';
         html += '        <div class="info-input-row">';
-        html += '          <div class="info-field"><label>빈티지</label><input type="number" id="inp_vintage_' + w.id + '" value="' + (w.vintage || '') + '"></div>';
-        html += '          <div class="info-field"><label>구매 가격</label><input type="text" id="inp_price_' + w.id + '" value="' + (w.purchase_price || '') + '"></div>';
+        html += '          <div class="info-field"><label>한국어 이름</label><input type="text" id="inp_name_ko_' + w.id + '" value="' + (w.name_ko || '') + '"></div>';
+        html += '          <div class="info-field"><label>원어/영어 이름</label><input type="text" id="inp_name_en_' + w.id + '" value="' + (w.name_en || '') + '"></div>';
         html += '        </div>';
-        html += '        <div class="info-field"><label>구매처</label><input type="text" id="inp_place_' + w.id + '" value="' + (w.purchase_place || '') + '"></div>';
-        html += '        <div class="info-field"><label>비고 메모</label><textarea id="inp_memo_' + w.id + '" rows="2">' + (w.notes || '') + '</textarea></div>';
+        html += '        <div class="info-input-row">';
+        html += '          <div class="info-field"><label>와인 타입</label>';
+        html += '            <select id="inp_type_' + w.id + '">';
+        html += '              <option value="Red" ' + (typeInfo.key === 'Red' ? 'selected' : '') + '>레드</option>';
+        html += '              <option value="White" ' + (typeInfo.key === 'White' ? 'selected' : '') + '>화이트</option>';
+        html += '              <option value="Sparkling" ' + (typeInfo.key === 'Sparkling' ? 'selected' : '') + '>스파클링</option>';
+        html += '              <option value="Dessert" ' + (typeInfo.key === 'Dessert' ? 'selected' : '') + '>디저트</option>';
+        html += '            </select>';
+        html += '          </div>';
+        html += '          <div class="info-field"><label>빈티지 (연도만)</label><input type="number" id="inp_vintage_' + w.id + '" value="' + (w.vintage || '') + '" placeholder="예: 2020"></div>';
+        html += '        </div>';
+        html += '        <div class="info-input-row">';
+        html += '          <div class="info-field"><label>생산국가</label><input type="text" id="inp_country_' + w.id + '" value="' + (w.country || '') + '"></div>';
+        html += '          <div class="info-field"><label>세부지역</label><input type="text" id="inp_region_' + w.id + '" value="' + (w.region || '') + '"></div>';
+        html += '        </div>';
+        html += '        <div class="info-input-row">';
+        html += '          <div class="info-field"><label>품종 (쉼표 구분)</label><input type="text" id="inp_varieties_' + w.id + '" value="' + varieties.replace('확인 필요', '') + '"></div>';
+        html += '          <div class="info-field"><label>생산자</label><input type="text" id="inp_producer_' + w.id + '" value="' + (w.producer || '') + '"></div>';
+        html += '        </div>';
+        html += '        <div class="info-input-row">';
+        html += '          <div class="info-field"><label>구매 가격</label><input type="text" id="inp_price_' + w.id + '" value="' + (w.purchase_price || '') + '"></div>';
+        html += '          <div class="info-field"><label>구매처</label><input type="text" id="inp_place_' + w.id + '" value="' + (w.purchase_place || '') + '"></div>';
+        html += '        </div>';
+        html += '        <div class="info-field"><label>메모</label><textarea id="inp_memo_' + w.id + '" rows="2">' + (w.notes || '') + '</textarea></div>';
         html += '        <div class="edit-actions"><button type="button" class="btn-cancel-info" onclick="toggleEditMode(\'' + w.id + '\', false)">취소</button><button type="button" class="btn-save-info" onclick="saveWineMeta(\'' + w.id + '\')">💾 저장</button></div>';
         html += '      </div>';
         html += '    </div>';
         html += '    <div class="card-actions">';
         html += '      <input type="file" id="cardFile_' + w.id + '" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile(\'' + w.id + '\', this.files[0])">';
-        html += '      <label for="cardFile_' + w.id + '" class="btn-photo-label">📷 사진 선택</label>';
+        html += '      <label for="cardFile_' + w.id + '" class="btn-photo-label">📷 사진 변경</label>';
         html += '      <button type="button" class="btn-delete" onclick="deleteWine(\'' + w.id + '\', \'' + (w.name_ko || w.name_en || '').replace(/'/g, "\\'") + '\')">🗑️ 삭제</button>';
         html += '    </div>';
         html += '  </div>';
@@ -428,13 +411,34 @@
     }
 
     async function saveWineMeta(wineId) {
+      const name_ko = document.getElementById('inp_name_ko_' + wineId).value.trim();
+      const name_en = document.getElementById('inp_name_en_' + wineId).value.trim();
+      const type = document.getElementById('inp_type_' + wineId).value;
       const v = document.getElementById('inp_vintage_' + wineId).value.trim();
+      const country = document.getElementById('inp_country_' + wineId).value.trim();
+      const region = document.getElementById('inp_region_' + wineId).value.trim();
+      const vars = document.getElementById('inp_varieties_' + wineId).value.trim();
+      const producer = document.getElementById('inp_producer_' + wineId).value.trim();
       const p = document.getElementById('inp_price_' + wineId).value.trim();
       const pl = document.getElementById('inp_place_' + wineId).value.trim();
       const m = document.getElementById('inp_memo_' + wineId).value.trim();
-      const { error } = await sb.from('wines').update({ vintage: v ? parseInt(v) : null, purchase_price: p || null, purchase_place: pl || null, notes: m || null }).eq('id', wineId);
-      if (error) alert('저장 오류: ' + error.message);
-      else { alert('저장되었습니다!'); fetchWines(); }
+
+      const { error } = await sb.from('wines').update({
+        name_ko: name_ko || '이름 미지정',
+        name_en: name_en || null,
+        wine_type: type,
+        vintage: v ? parseInt(v) : null,
+        country: country || '확인 필요',
+        region: region || '확인 필요',
+        grape_varieties: vars ? vars.split(',').map(s=>s.trim()) : ['확인 필요'],
+        producer: producer || '확인 필요',
+        purchase_price: p || null,
+        purchase_place: pl || null,
+        notes: m || null
+      }).eq('id', wineId);
+
+      if (error) alert('저장 실패: ' + error.message);
+      else { alert('수정되었습니다.'); fetchWines(); }
     }
 
     async function handleSingleFile(wineId, file) {
@@ -442,11 +446,11 @@
       const img = await resizeImage(file);
       const { error } = await sb.from('wines').update({ image_url: img.dataUrl }).eq('id', wineId);
       if (error) alert('오류: ' + error.message);
-      else { alert('라벨 사진이 등록되었습니다!'); fetchWines(); }
+      else { alert('사진이 변경되었습니다.'); fetchWines(); }
     }
 
     async function deleteWine(wineId, wineName) {
-      if (!confirm("'" + wineName + "'을(를) 완전히 삭제하시겠습니까?")) return;
+      if (!confirm("'" + wineName + "'을(를) 삭제하시겠습니까?")) return;
       const { error } = await sb.from('wines').delete().eq('id', wineId);
       if (error) alert('삭제 실패: ' + error.message);
       else { alert('삭제되었습니다.'); fetchWines(); }
@@ -472,13 +476,13 @@
           const img = new Image();
           img.onload = () => {
             const canvas = document.createElement('canvas');
-            const maxDim = 640;
+            const maxDim = 500;
             let w = img.width, h = img.height;
             if (w > h && w > maxDim) { h *= maxDim / w; w = maxDim; }
             else if (h > maxDim) { w *= maxDim / h; h = maxDim; }
             canvas.width = w; canvas.height = h;
             canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
             resolve({ base64: dataUrl.split(',')[1], dataUrl });
           };
           img.src = e.target.result;
@@ -515,15 +519,14 @@
       renderThumbs();
     }
 
-    // 💡 503 과부하 지수 백오프 자동 재시도 (최대 3회)
     async function executeWithRetry(modelName, base64Data, promptText, onRetryStatus) {
       const apiKey = getApiKey();
       if (!apiKey) {
-        throw new Error('API 키가 설정되지 않았습니다. 상단 우측의 [🔑 키 설정] 버튼을 눌러 API 키를 먼저 등록해 주세요.');
+        throw new Error('API 키가 설정되지 않았습니다. 상단의 [🔑 키 설정] 버튼을 눌러 입력해 주세요.');
       }
 
       const maxRetries = 3;
-      let delayMs = 1200;
+      let delayMs = 1500;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
@@ -541,7 +544,10 @@
                   { inlineData: { mimeType: "image/jpeg", data: base64Data } }
                 ]
               }],
-              generationConfig: { responseMimeType: "application/json" }
+              generationConfig: { 
+                responseMimeType: "application/json",
+                temperature: 0.0 // 추론 차단: 오직 사실(라벨 글자)만 추출
+              }
             })
           });
 
@@ -572,7 +578,7 @@
       }
     }
 
-    // AI 분석 및 DB 자동 등록
+    // 🎯 사실 추출 전용 프롬프트 (추측 금지, 모르면 '확인 필요')
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -580,38 +586,32 @@
       status.style.display = 'block';
       btn.disabled = true;
       const total = processedImages.length;
-      let logHtml = '<b>총 ' + total + '병 분석 및 등록 진행...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">';
+      let logHtml = '<b>총 ' + total + '병 텍스트 추출 시작...</b><br><hr style="margin:8px 0; border:0; border-top:1px solid #ddd;">';
       status.innerHTML = logHtml;
 
-      const prompt = `와인 라벨 이미지를 분석하여 아래 JSON 포맷으로만 응답하세요. 백틱이나 부가 설명 없이 순수 JSON 문자열만 출력하세요.
+      const prompt = `당신은 OCR 와인 라벨 리더입니다. 이미지에 인쇄된 텍스트만 읽으세요. 
+절대로 외부 지식을 바탕으로 임의 추론하거나 지어내지 마세요.
+이미지에서 명확히 확인되지 않는 항목은 반드시 "확인 필요" 문자열로 지정하고, 빈티지가 안 보이면 null로 반환하세요.
+
+출력 JSON 형식:
 {
-  "name_ko": "라벨에 표기된 한국어 정식 명칭 (연도 포함)",
-  "name_en": "라벨에 표기된 원어/영어 명칭",
-  "wine_type": "Red/White/Sparkling/Dessert 중 택1",
-  "country": "생산 국가",
-  "region": "세부 생산지",
-  "producer": "생산자",
-  "grape_varieties": ["품종"],
-  "vintage": 2022,
-  "best_vintages": "추천 빈티지",
-  "expert_scores": {},
-  "tasting_notes": {
-    "aroma": ["아로마1", "아로마2", "아로마3"],
-    "body": 4,
-    "tannin": 4,
-    "acidity": 4
-  },
-  "drinking_window_start": 2026,
-  "drinking_window_end": 2045
+  "name_ko": "라벨에 한글이 있으면 한글명, 없으면 원어명 그대로",
+  "name_en": "라벨에 적힌 알파벳 원어 명칭 (판독 불가시 확인 필요)",
+  "wine_type": "Red 또는 White 또는 Sparkling 또는 Dessert 중 라벨이나 포도품종으로 명확한 것, 모르면 Red",
+  "country": "라벨에 적힌 생산국가 (모르면 확인 필요)",
+  "region": "라벨에 적힌 세부 생산지 (모르면 확인 필요)",
+  "producer": "라벨에 적힌 생산자/와이너리명 (모르면 확인 필요)",
+  "grape_varieties": ["라벨에 명시된 품종, 없으면 확인 필요"],
+  "vintage": 2020 또는 null
 }`;
 
       for (let i = 0; i < total; i++) {
         const item = processedImages[i];
-        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] Gemini AI 라벨 분석 중...';
+        status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 라벨 팩트 판독 중...';
 
         try {
           const rawResult = await executeWithRetry('gemini-3.8-flash', item.base64, prompt, (att, maxAtt, sec) => {
-            status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 구글 서버 지연 감지: ' + sec + '초 후 자동 재시도 (' + att + '/' + maxAtt + ')...';
+            status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 서버 대기: ' + sec + '초 후 재시도 (' + att + '/' + maxAtt + ')...';
           });
 
           const cleanJson = rawResult.replace(/```json/gi, '').replace(/```/g, '').trim();
@@ -628,7 +628,7 @@
           const { error: insErr } = await sb.from('wines').insert([dbRecord]);
           if (insErr) throw insErr;
 
-          logHtml += '[' + (i + 1) + '/' + total + '] ✅ <b>' + parsedData.name_ko + '</b> 등록 완료!<br>';
+          logHtml += '[' + (i + 1) + '/' + total + '] ✅ <b>' + (parsedData.name_ko || parsedData.name_en) + '</b> 등록 완료!<br>';
         } catch (err) {
           logHtml += '[' + (i + 1) + '/' + total + '] ❌ 실패: ' + err.message + '<br>';
         }
@@ -639,6 +639,7 @@
       processedImages = [];
       renderThumbs();
       status.innerHTML = logHtml;
+      fetchWines();
     }
   </script>
 </body>
