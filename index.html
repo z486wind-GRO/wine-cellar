@@ -51,6 +51,7 @@
     .type-red { background: #ffe3e3; color: #c92a2a; }
     .type-white { background: #e7f5ff; color: #1864ab; }
     .type-sparkling { background: #fff3bf; color: #d9480f; }
+    .type-rose { background: #fcc2d7; color: #a61e4d; }
     .type-dessert { background: #f3d9fa; color: #862e9c; }
 
     .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 3px; }
@@ -65,103 +66,9 @@
     .wine-body { display: none; padding: 14px 16px 16px; background: #fafbfc; border-top: 1px solid #f1f3f5; }
     .wine-card.active .wine-body { display: block; }
     
-    .detail-img-box { text-align: center; margin-bottom: 12px; }
-    .detail-large-img { max-width: 180px; max-height: 240px; border-radius: 8px; border: 1px solid #ddd; }
-
-    .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
-    .spec-table td { padding: 5px 0; }
-    .spec-table td.k { color: #868e96; width: 85px; font-weight: 600; }
-
-    .score-chip { display: inline-block; background: #fff3bf; color: #d9480f; font-weight: 700; padding: 2px 7px; border-radius: 4px; font-size: 12px; margin-right: 4px; }
-    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
-    .note-label { font-size: 12px; font-weight: 700; color: #495057; margin-bottom: 6px; }
-    .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
-    .tag { background: #e7f5ff; color: #1971c2; font-size: 12px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
-
-    .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #495057; margin-bottom: 5px; }
-    .gauge-dots { color: #800020; letter-spacing: 3px; font-size: 14px; font-weight: 700; }
-
-    .user-info-와인 도메인 지식베이스를 완전히 개방하여, **라벨에서 이름만 식별되면 생산국가, 세부 생산지, 포도 품종, 와인 타입, 시음 적기까지 알아서 똑똑하게 채워 넣는 구조**로 전면 복원했습니다.
-
-또한 지연과 503 오류를 줄이기 위해 모바일 전송 페이로드를 가볍게 최적화했습니다.
-
----
-
-### [Chrome으로 GitHub index.html 편집창 열기](intent://github.com/z486wind-GRO/wine-cellar/edit/main/index.html#Intent;scheme=https;package=com.android.chrome;end)
-*(또는 [일반 웹 편집창 링크](https://github.com/z486wind-GRO/wine-cellar/edit/main/index.html))*
-
-기존 코드를 전체 선택(`Ctrl` + `A`) 후 지우고, 아래 코드를 붙여넣어 커밋해 주세요.
-
-```html
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>🍷 와인 컬렉션</title>
-  <script src="[https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2](https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2)"></script>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f2f4f7; padding: 14px; color: #1a1a1a; }
-    
-    #authOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #212529; z-index: 99999; display: flex; align-items: center; justify-content: center; padding: 20px; }
-    .auth-card { background: #fff; border-radius: 16px; padding: 30px 24px; width: 100%; max-width: 360px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-    .auth-title { font-size: 22px; font-weight: 800; color: #800020; margin-bottom: 8px; }
-    .auth-desc { font-size: 13px; color: #6c757d; margin-bottom: 24px; line-height: 1.5; }
-    .auth-input { width: 100%; padding: 14px; font-size: 20px; border: 2px solid #dee2e6; border-radius: 10px; text-align: center; letter-spacing: 6px; outline: none; margin-bottom: 14px; font-weight: 700; }
-    .auth-input:focus { border-color: #800020; }
-    .auth-btn { width: 100%; padding: 14px; background: #800020; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
-    .auth-error { color: #e03131; font-size: 13px; font-weight: 600; margin-top: 10px; display: none; }
-
-    #mainApp { display: none; }
-
-    .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .header-btns { display: flex; gap: 6px; }
-    .header-btn { background: #e9ecef; border: 1px solid #ced4da; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #495057; cursor: pointer; }
-
-    .tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; background: #e4e7eb; color: #495057; cursor: pointer; }
-    .tab-btn.active { background: #800020; color: #fff; }
-
-    .control-panel { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid #e1e4e8; }
-    .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .filter-chip { display: flex; align-items: center; background: #f1f3f5; padding: 6px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #495057; cursor: pointer; user-select: none; }
-    .filter-chip.checked { background: #800020; color: #fff; }
-
-    .sort-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #f1f3f5; }
-    .sort-label { font-size: 13px; font-weight: 700; color: #495057; }
-    .sort-select { padding: 6px 10px; border-radius: 8px; border: 1px solid #ced4da; font-size: 13px; font-weight: 600; }
-
-    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; font-size: 15px; font-weight: 700; color: #333; }
-    .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-
-    .wine-card { background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e1e4e8; overflow: hidden; }
-    .wine-summary { padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .wine-thumb { width: 52px; height: 74px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; }
-    .wine-thumb-placeholder { width: 52px; height: 74px; border-radius: 6px; background: #f1f3f5; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #e9ecef; }
-
-    .wine-name-box { flex: 1; min-width: 0; }
-    .wine-tag-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
-    .type-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
-    .type-red { background: #ffe3e3; color: #c92a2a; }
-    .type-white { background: #e7f5ff; color: #1864ab; }
-    .type-sparkling { background: #fff3bf; color: #d9480f; }
-    .type-dessert { background: #f3d9fa; color: #862e9c; }
-
-    .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 3px; }
-    .wine-name-en { font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 4px; }
-    .wine-sub-text { font-size: 11px; color: #868e96; }
-
-    .wine-badge-box { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
-    .badge-vintage { background: #800020; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
-    .arrow { font-size: 11px; color: #adb5bd; }
-    .wine-card.active .arrow { transform: rotate(180deg); color: #800020; }
-
-    .wine-body { display: none; padding: 14px 16px 16px; background: #fafbfc; border-top: 1px solid #f1f3f5; }
-    .wine-card.active .wine-body { display: block; }
-    
-    .detail-img-box { text-align: center; margin-bottom: 12px; }
-    .detail-large-img { max-width: 180px; max-height: 240px; border-radius: 8px; border: 1px solid #ddd; }
+    .detail-img-box { text-align: center; margin-bottom: 12px; cursor: pointer; position: relative; }
+    .detail-large-img { max-width: 180px; max-height: 240px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
+    .zoom-hint { font-size: 11px; color: #868e96; margin-top: 4px; font-weight: 600; }
 
     .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
     .spec-table td { padding: 5px 0; }
@@ -201,6 +108,11 @@
     .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
     .del-thumb { position: absolute; top: -5px; right: -5px; background: #fa5252; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: 700; cursor: pointer; }
     #statusBox { margin-top: 16px; font-size: 13px; text-align: left; background: #f8f9fa; padding: 14px; border-radius: 8px; display: none; line-height: 1.6; border: 1px solid #e9ecef; }
+
+    /* 🔍 사진 확대 라이트박스 모달 */
+    #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); z-index: 100000; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
+    #modalImg { max-width: 95%; max-height: 85%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; }
+    .modal-close-btn { position: absolute; top: 16px; right: 20px; color: #fff; font-size: 32px; font-weight: 800; cursor: pointer; }
   </style>
 </head>
 <body>
@@ -235,6 +147,7 @@
           <span class="filter-chip checked" id="chip-ALL" onclick="toggleFilter('ALL')">전체보기</span>
           <span class="filter-chip" id="chip-Red" onclick="toggleFilter('Red')">레드</span>
           <span class="filter-chip" id="chip-White" onclick="toggleFilter('White')">화이트</span>
+          <span class="filter-chip" id="chip-Rose" onclick="toggleFilter('Rose')">로제</span>
           <span class="filter-chip" id="chip-Sparkling" onclick="toggleFilter('Sparkling')">스파클링</span>
           <span class="filter-chip" id="chip-Dessert" onclick="toggleFilter('Dessert')">디저트</span>
         </div>
@@ -272,9 +185,15 @@
     </div>
   </div>
 
+  <!-- 🔍 사진 확대 라이트박스 팝업 -->
+  <div id="imageModal" onclick="closeImageModal()">
+    <span class="modal-close-btn">&times;</span>
+    <img id="modalImg" src="" alt="확대 라벨">
+  </div>
+
   <script>
     const CELLAR_PASSWORD = "0070";
-    const SUPABASE_URL = "[https://eiysvllsuzmjobysnxvm.supabase.co](https://eiysvllsuzmjobysnxvm.supabase.co)";
+    const SUPABASE_URL = "https://eiysvllsuzmjobysnxvm.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpeXN2bGxzdXptam9ieXNueHZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkzMDcxNTIsImV4cCI6MjEwNDg4MzE1Mn0.wB0Mn6Oaj_rpNzZnWF8ClrTtfMW9lHTe9zarJo_yKB0";
 
     const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -350,11 +269,38 @@
       card.classList.toggle('active');
     }
 
+    // 🔍 사진 확대 팝업 제어
+    function openImageModal(imgSrc, e) {
+      if (e) e.stopPropagation();
+      if (!imgSrc) return;
+      const modal = document.getElementById('imageModal');
+      const modalImg = document.getElementById('modalImg');
+      modalImg.src = imgSrc;
+      modal.style.display = 'flex';
+    }
+
+    function closeImageModal() {
+      document.getElementById('imageModal').style.display = 'none';
+    }
+
+    // 🍷 [정밀 분류] 로제(Rose) 추가
     function resolveWineType(w) {
       const raw = String(w.wine_type || '').trim().toLowerCase();
+      const name = ((w.name_ko || '') + ' ' + (w.name_en || '')).toLowerCase();
+
+      // 1순위: DB wine_type 필드
+      if (raw === 'rose' || raw.includes('로제')) return { key: 'Rose', label: '로제', cls: 'type-rose' };
       if (raw === 'sparkling' || raw.includes('스파클링') || raw.includes('샴페인')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
       if (raw === 'dessert' || raw.includes('디저트') || raw.includes('소테른')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
       if (raw === 'white' || raw.includes('화이트')) return { key: 'White', label: '화이트', cls: 'type-white' };
+      if (raw === 'red' || raw.includes('레드')) return { key: 'Red', label: '레드', cls: 'type-red' };
+
+      // 2순위: 명칭 기반 분류
+      if (name.includes('로제') || name.includes('rosé') || name.includes('rose')) return { key: 'Rose', label: '로제', cls: 'type-rose' };
+      if (name.includes('샴페인') || name.includes('champagne') || name.includes('cava') || name.includes('prosecco')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
+      if (name.includes('소테른') || name.includes('sauternes') || name.includes('icewine')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
+      if (name.includes('샤르도네') || name.includes('chardonnay') || name.includes('소비뇽 블랑') || name.includes('sauvignon blanc') || name.includes('리슬링') || name.includes('riesling')) return { key: 'White', label: '화이트', cls: 'type-white' };
+
       return { key: 'Red', label: '레드', cls: 'type-red' };
     }
 
@@ -374,7 +320,7 @@
         else activeFilters.add(type);
         if (activeFilters.size === 0) activeFilters.add('ALL');
       }
-      ['ALL', 'Red', 'White', 'Sparkling', 'Dessert'].forEach(t => {
+      ['ALL', 'Red', 'White', 'Rose', 'Sparkling', 'Dessert'].forEach(t => {
         const chip = document.getElementById('chip-' + t);
         if (chip) {
           if (activeFilters.has(t)) chip.classList.add('checked');
@@ -409,7 +355,7 @@
 
       if (countText) countText.innerText = '보관 중인 와인 (' + filtered.length + '병 / 전체 ' + allWines.length + '병)';
       if (filtered.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">등록된 와인이 없습니다.</p>';
+        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">해당 분류의 와인이 없습니다.</p>';
         return;
       }
 
@@ -418,8 +364,11 @@
         const typeInfo = resolveWineType(w);
         const vintageStr = w.vintage ? w.vintage : 'NV';
         const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
-        const thumbHtml = hasValidImg ? '<img src="' + w.image_url + '" class="wine-thumb" alt="label">' : '<div class="wine-thumb-placeholder">🍷</div>';
-        const detailImgHtml = hasValidImg ? '<div class="detail-img-box"><img src="' + w.image_url + '" class="detail-large-img" alt="label"></div>' : '';
+        
+        // 🔍 클릭 시 확대 모달 실행 이벤트 바인딩
+        const thumbHtml = hasValidImg ? '<img src="' + w.image_url + '" class="wine-thumb" alt="label" onclick="openImageModal(\'' + w.image_url + '\', event)">' : '<div class="wine-thumb-placeholder">🍷</div>';
+        const detailImgHtml = hasValidImg ? '<div class="detail-img-box" onclick="openImageModal(\'' + w.image_url + '\', event)"><img src="' + w.image_url + '" class="detail-large-img" alt="label"><div class="zoom-hint">🔍 터치하여 크게 보기</div></div>' : '';
+        
         const curPriceText = formatPrice(w.purchase_price);
         let varieties = Array.isArray(w.grape_varieties) ? w.grape_varieties.join(', ') : (w.grape_varieties || '-');
 
@@ -460,6 +409,7 @@
         html += '            <select id="inp_type_' + w.id + '">';
         html += '              <option value="Red" ' + (typeInfo.key === 'Red' ? 'selected' : '') + '>레드</option>';
         html += '              <option value="White" ' + (typeInfo.key === 'White' ? 'selected' : '') + '>화이트</option>';
+        html += '              <option value="Rose" ' + (typeInfo.key === 'Rose' ? 'selected' : '') + '>로제</option>';
         html += '              <option value="Sparkling" ' + (typeInfo.key === 'Sparkling' ? 'selected' : '') + '>스파클링</option>';
         html += '              <option value="Dessert" ' + (typeInfo.key === 'Dessert' ? 'selected' : '') + '>디저트</option>';
         html += '            </select>';
@@ -618,7 +568,7 @@
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-          const url = '[https://generativelanguage.googleapis.com/v1beta/models/](https://generativelanguage.googleapis.com/v1beta/models/)' + modelName + ':generateContent';
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent';
           const res = await fetch(url, {
             method: 'POST',
             headers: {
@@ -666,7 +616,7 @@
       }
     }
 
-    // 🍷 와인 전문 소믈리에 지식베이스 프롬프트
+    // 🍷 와인 전문 소믈리에 지식베이스 프롬프트 (로제 포함)
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -686,9 +636,9 @@
 {
   "name_ko": "한국에서 통용되는 정식 한국어 와인명 (예: 발디카바 브루넬로 디 몬탈치노)",
   "name_en": "원어/영어 공식 명칭 (예: Valdicava Brunello di Montalcino)",
-  "wine_type": "Red 또는 White 또는 Sparkling 또는 Dessert 중 정확히 택1",
+  "wine_type": "Red 또는 White 또는 Rose 또는 Sparkling 또는 Dessert 중 정확히 택1",
   "country": "생산 국가 (예: 이탈리아, 프랑스, 미국)",
-  "region": "세부 생산 지역 (예: 토스카나 몬탈치노, 보르도 포이약)",
+  "region": "세부 생산 지역 (예: 토스카나 몬탈치노, 프로방스, 보르도 포이약)",
   "producer": "와이너리/생산자명 (예: Valdicava)",
   "grape_varieties": ["대표 포도 품종 배열 (예: 산지오베제 100%, 카베르네 소비뇽 등)"],
   "vintage": 2020 또는 null,
