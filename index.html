@@ -18,32 +18,35 @@
     .auth-btn { width: 100%; padding: 14px; background: #800020; color: #fff; border: none; border-radius: 10px; font-size: 16px; font-weight: 700; cursor: pointer; }
     .auth-error { color: #e03131; font-size: 13px; font-weight: 600; margin-top: 10px; display: none; }
 
-    #mainApp { display: none; }
+    #mainApp { display: none; max-width: 680px; margin: 0 auto; }
 
     .top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
     .header-btns { display: flex; gap: 6px; }
     .header-btn { background: #e9ecef; border: 1px solid #ced4da; padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #495057; cursor: pointer; }
 
-    .tab-bar { display: flex; gap: 8px; margin-bottom: 12px; }
-    .tab-btn { flex: 1; padding: 12px; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; background: #e4e7eb; color: #495057; cursor: pointer; }
+    .tab-bar { display: flex; gap: 6px; margin-bottom: 12px; }
+    .tab-btn { flex: 1; padding: 11px 6px; border: none; border-radius: 10px; font-size: 13px; font-weight: 700; background: #e4e7eb; color: #495057; cursor: pointer; transition: 0.15s; }
     .tab-btn.active { background: #800020; color: #fff; }
 
     .control-panel { background: #fff; border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; border: 1px solid #e1e4e8; }
+    .search-box { width: 100%; padding: 9px 12px; border: 1px solid #ced4da; border-radius: 8px; font-size: 13px; margin-bottom: 10px; outline: none; }
+    .search-box:focus { border-color: #800020; }
+
     .filter-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-    .filter-chip { display: flex; align-items: center; background: #f1f3f5; padding: 6px 10px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #495057; cursor: pointer; user-select: none; }
+    .filter-chip { display: flex; align-items: center; background: #f1f3f5; padding: 6px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; color: #495057; cursor: pointer; user-select: none; }
     .filter-chip.checked { background: #800020; color: #fff; }
 
     .sort-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 8px; border-top: 1px solid #f1f3f5; }
     .sort-label { font-size: 13px; font-weight: 700; color: #495057; }
     .sort-select { padding: 6px 10px; border-radius: 8px; border: 1px solid #ced4da; font-size: 13px; font-weight: 600; }
 
-    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; font-size: 15px; font-weight: 700; color: #333; }
-    .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; font-size: 14px; font-weight: 700; color: #333; }
+    .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
 
     .wine-card { background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e1e4e8; overflow: hidden; }
     .wine-summary { padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
-    .wine-thumb { width: 52px; height: 74px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; }
-    .wine-thumb-placeholder { width: 52px; height: 74px; border-radius: 6px; background: #f1f3f5; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #e9ecef; }
+    .wine-thumb { width: 52px; height: 74px; border-radius: 6px; object-fit: cover; border: 1px solid #ddd; flex-shrink: 0; }
+    .wine-thumb-placeholder { width: 52px; height: 74px; border-radius: 6px; background: #f1f3f5; display: flex; align-items: center; justify-content: center; font-size: 20px; border: 1px solid #e9ecef; flex-shrink: 0; }
 
     .wine-name-box { flex: 1; min-width: 0; }
     .wine-tag-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
@@ -54,25 +57,33 @@
     .type-rose { background: #fcc2d7; color: #a61e4d; }
     .type-dessert { background: #f3d9fa; color: #862e9c; }
 
-    .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 3px; }
-    .wine-name-en { font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 4px; }
+    .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 2px; word-break: keep-all; }
+    .wine-name-en { font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .wine-sub-text { font-size: 11px; color: #868e96; }
 
-    .wine-badge-box { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; }
+    .wine-badge-box { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
     .badge-vintage { background: #800020; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 12px; font-weight: 700; }
-    .arrow { font-size: 11px; color: #adb5bd; }
+    .arrow { font-size: 11px; color: #adb5bd; transition: transform 0.2s; }
     .wine-card.active .arrow { transform: rotate(180deg); color: #800020; }
 
     .wine-body { display: none; padding: 14px 16px 16px; background: #fafbfc; border-top: 1px solid #f1f3f5; }
     .wine-card.active .wine-body { display: block; }
     
-    .detail-img-box { text-align: center; margin-bottom: 12px; cursor: pointer; position: relative; }
+    .detail-img-box { text-align: center; margin-bottom: 12px; cursor: pointer; }
     .detail-large-img { max-width: 180px; max-height: 240px; border-radius: 8px; border: 1px solid #ddd; box-shadow: 0 4px 10px rgba(0,0,0,0.06); }
     .zoom-hint { font-size: 11px; color: #868e96; margin-top: 4px; font-weight: 600; }
 
     .spec-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 12px; }
-    .spec-table td { padding: 5px 0; }
+    .spec-table td { padding: 5px 0; vertical-align: top; }
     .spec-table td.k { color: #868e96; width: 85px; font-weight: 600; }
+
+    .note-box { background: #fff; border: 1px solid #eaecef; border-radius: 10px; padding: 12px; margin-bottom: 12px; }
+    .note-label { font-size: 12px; font-weight: 700; color: #495057; margin-bottom: 6px; }
+    .aroma-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .tag { background: #e7f5ff; color: #1971c2; font-size: 11px; padding: 3px 8px; border-radius: 12px; font-weight: 600; }
+    .gauge-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+    .gauge-item { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: #495057; }
+    .gauge-dots { color: #800020; letter-spacing: 2px; font-size: 13px; font-weight: 700; }
 
     .user-info-panel { background: #fff; border: 1px solid #dee2e6; border-radius: 10px; padding: 12px; margin-bottom: 14px; }
     .panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #f1f3f5; }
@@ -87,8 +98,9 @@
     .info-input-row { display: flex; gap: 8px; }
     .info-field { flex: 1; display: flex; flex-direction: column; gap: 3px; }
     .info-field label { font-size: 11px; font-weight: 700; color: #6c757d; }
-    .info-field input, .info-field textarea, .info-field select { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; }
+    .info-field input, .info-field textarea, .info-field select { padding: 8px 10px; border: 1px solid #ced4da; border-radius: 6px; font-size: 13px; outline: none; width: 100%; }
 
+    .btn-ai-autofill { background: #f3f0ff; color: #5f3dc4; border: 1px solid #d0bfff; padding: 8px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; margin-bottom: 4px; }
     .edit-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 4px; }
     .btn-save-info { background: #800020; color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
     .btn-cancel-info { background: #ced4da; color: #495057; border: none; padding: 7px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -97,7 +109,7 @@
     .btn-photo-label { flex: 1; padding: 10px; background: #e7f5ff; color: #1971c2; border: 1px solid #a5d8ff; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; text-align: center; }
     .btn-delete { flex: 1; padding: 10px; background: #fff5f5; color: #e03131; border: 1px solid #ffc9c9; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
 
-    #tabUploadSection { display: none; background: #fff; padding: 22px 18px; border-radius: 14px; text-align: center; }
+    #tabUploadSection, #tabSommelierSection { display: none; background: #fff; padding: 20px 16px; border-radius: 14px; border: 1px solid #e1e4e8; }
     .btn-direct-label { display: block; width: 100%; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 15px; cursor: pointer; margin-top: 8px; text-align: center; }
     .btn-album { background: #800020; color: #fff; }
     .btn-cam { background: #495057; color: #fff; }
@@ -108,6 +120,14 @@
     .thumb-wrap img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; border: 1px solid #ddd; }
     .del-thumb { position: absolute; top: -5px; right: -5px; background: #fa5252; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: 700; cursor: pointer; }
     #statusBox { margin-top: 16px; font-size: 13px; text-align: left; background: #f8f9fa; padding: 14px; border-radius: 8px; display: none; line-height: 1.6; border: 1px solid #e9ecef; }
+
+    /* 🤖 AI 소믈리에 탭 스타일 */
+    .quick-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+    .q-chip { background: #f8f9fa; border: 1px solid #dee2e6; padding: 6px 10px; border-radius: 16px; font-size: 12px; font-weight: 600; color: #495057; cursor: pointer; }
+    .q-chip:hover { border-color: #800020; color: #800020; }
+    .somm-input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 10px; resize: none; }
+    .somm-btn { width: 100%; padding: 13px; background: #800020; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    #sommResultBox { margin-top: 16px; background: #fafbfc; border: 1px solid #e9ecef; border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.65; white-space: pre-wrap; display: none; }
 
     /* 🔍 사진 확대 라이트박스 모달 */
     #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); z-index: 100000; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
@@ -137,12 +157,15 @@
     </div>
 
     <div class="tab-bar">
-      <button type="button" class="tab-btn active" id="btnList" onclick="switchView('list')">🍷 와인 컬렉션</button>
-      <button type="button" class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 새 라벨 등록</button>
+      <button type="button" class="tab-btn active" id="btnList" onclick="switchView('list')">🍷 컬렉션 목록</button>
+      <button type="button" class="tab-btn" id="btnSommelier" onclick="switchView('sommelier')">🤖 AI 소믈리에</button>
+      <button type="button" class="tab-btn" id="btnUpload" onclick="switchView('upload')">📸 라벨 등록</button>
     </div>
 
+    <!-- 1. 컬렉션 목록 섹션 -->
     <div id="tabListSection">
       <div class="control-panel">
+        <input type="text" id="searchInput" class="search-box" placeholder="🔍 와인 이름, 생산자, 품종, 지역 검색..." oninput="applyFilterAndSort()">
         <div class="filter-row">
           <span class="filter-chip checked" id="chip-ALL" onclick="toggleFilter('ALL')">전체보기</span>
           <span class="filter-chip" id="chip-Red" onclick="toggleFilter('Red')">레드</span>
@@ -172,7 +195,25 @@
       </div>
     </div>
 
-    <div id="tabUploadSection">
+    <!-- 2. AI 소믈리에 추천 섹션 (보유 와인 DB 직접 연동) -->
+    <div id="tabSommelierSection">
+      <h3 style="margin-bottom: 6px; font-size: 17px; color: #800020;">🤖 내 셀러 맞춤 소믈리에</h3>
+      <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">현재 셀러에 보관 중인 와인 리스트를 기반으로 상황에 딱 맞는 와인을 골라줍니다.</p>
+      
+      <div class="quick-prompts">
+        <span class="q-chip" onclick="setSommPrompt('여성분들이 점심식사와 같이 마실 당도가 있거나 부드러운 와인 추천해줘')">🥗 여성 점심 모임 (당도/부드러움)</span>
+        <span class="q-chip" onclick="setSommPrompt('한우 구이 또는 야키스키와 가장 잘 어울리는 풀바디 레드 와인 추천해줘')">🥩 한우 구이 / 야키스키 페어링</span>
+        <span class="q-chip" onclick="setSommPrompt('보관 중인 와인 중 지금 시음 적기에 들어선 와인 우선순위로 알려줘')">⏳ 현재 시음 적기 도래 와인</span>
+        <span class="q-chip" onclick="setSommPrompt('특별한 기념일에 오픈하기 좋은 최고급 메인 와인 2병 추천해줘')">✨ 기념일 스페셜 와인</span>
+      </div>
+
+      <textarea id="sommQuery" class="somm-input" rows="3" placeholder="예: 오늘 점심에 파스타와 함께 여성분들이 마시기 좋은 달콤하거나 산뜻한 와인 추천해줘"></textarea>
+      <button type="button" id="sommBtn" class="somm-btn" onclick="askSommelier()">내 셀러에서 와인 추천받기 🍷</button>
+      <div id="sommResultBox"></div>
+    </div>
+
+    <!-- 3. 새 라벨 등록 섹션 -->
+    <div id="tabUploadSection" style="text-align: center;">
       <h3 style="margin-bottom: 6px; font-size: 18px;">와인/주류 라벨 추가</h3>
       <p style="font-size: 13px; color: #6c757d; margin-bottom: 14px;">라벨 사진을 올리면 AI가 와인 지식베이스를 결합해 상세 스펙을 자동 완성합니다.</p>
       <input type="file" id="directAlbumIn" accept="image/jpeg, image/png, image/webp" multiple style="display:none;" onchange="handleIncomingFiles(this.files)">
@@ -251,25 +292,28 @@
     };
 
     function switchView(tab) {
-      if (tab === 'list') {
-        document.getElementById('tabListSection').style.display = 'block';
-        document.getElementById('tabUploadSection').style.display = 'none';
-        document.getElementById('btnList').classList.add('active');
-        document.getElementById('btnUpload').classList.remove('active');
-        fetchWines();
-      } else {
-        document.getElementById('tabListSection').style.display = 'none';
-        document.getElementById('tabUploadSection').style.display = 'block';
-        document.getElementById('btnList').classList.remove('active');
-        document.getElementById('btnUpload').classList.add('active');
-      }
+      document.getElementById('tabListSection').style.display = (tab === 'list') ? 'block' : 'none';
+      document.getElementById('tabSommelierSection').style.display = (tab === 'sommelier') ? 'block' : 'none';
+      document.getElementById('tabUploadSection').style.display = (tab === 'upload') ? 'block' : 'none';
+
+      document.getElementById('btnList').classList.toggle('active', tab === 'list');
+      document.getElementById('btnSommelier').classList.toggle('active', tab === 'sommelier');
+      document.getElementById('btnUpload').classList.toggle('active', tab === 'upload');
+
+      if (tab === 'list') fetchWines();
     }
 
     function toggleCard(card) {
       card.classList.toggle('active');
     }
 
-    // 🔍 사진 확대 팝업 제어
+    function makeDots(val) {
+      let n = parseInt(val) || 0;
+      if (n < 0) n = 0;
+      if (n > 5) n = 5;
+      return "●".repeat(n) + "○".repeat(5 - n);
+    }
+
     function openImageModal(imgSrc, e) {
       if (e) e.stopPropagation();
       if (!imgSrc) return;
@@ -283,23 +327,20 @@
       document.getElementById('imageModal').style.display = 'none';
     }
 
-    // 🍷 [정밀 분류] 로제(Rose) 추가
     function resolveWineType(w) {
       const raw = String(w.wine_type || '').trim().toLowerCase();
       const name = ((w.name_ko || '') + ' ' + (w.name_en || '')).toLowerCase();
 
-      // 1순위: DB wine_type 필드
       if (raw === 'rose' || raw.includes('로제')) return { key: 'Rose', label: '로제', cls: 'type-rose' };
       if (raw === 'sparkling' || raw.includes('스파클링') || raw.includes('샴페인')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
       if (raw === 'dessert' || raw.includes('디저트') || raw.includes('소테른')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
       if (raw === 'white' || raw.includes('화이트')) return { key: 'White', label: '화이트', cls: 'type-white' };
       if (raw === 'red' || raw.includes('레드')) return { key: 'Red', label: '레드', cls: 'type-red' };
 
-      // 2순위: 명칭 기반 분류
       if (name.includes('로제') || name.includes('rosé') || name.includes('rose')) return { key: 'Rose', label: '로제', cls: 'type-rose' };
-      if (name.includes('샴페인') || name.includes('champagne') || name.includes('cava') || name.includes('prosecco')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
-      if (name.includes('소테른') || name.includes('sauternes') || name.includes('icewine')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
-      if (name.includes('샤르도네') || name.includes('chardonnay') || name.includes('소비뇽 블랑') || name.includes('sauvignon blanc') || name.includes('리슬링') || name.includes('riesling')) return { key: 'White', label: '화이트', cls: 'type-white' };
+      if (name.includes('샴페인') || name.includes('champagne') || name.includes('cava') || name.includes('prosecco') || name.includes('스푸만테')) return { key: 'Sparkling', label: '스파클링', cls: 'type-sparkling' };
+      if (name.includes('소테른') || name.includes('sauternes') || name.includes('icewine') || name.includes('디저트') || name.includes('모스카토')) return { key: 'Dessert', label: '디저트', cls: 'type-dessert' };
+      if (name.includes('샤르도네') || name.includes('chardonnay') || name.includes('소비뇽 블랑') || name.includes('sauvignon blanc') || name.includes('리슬링') || name.includes('riesling') || name.includes('샤블리')) return { key: 'White', label: '화이트', cls: 'type-white' };
 
       return { key: 'Red', label: '레드', cls: 'type-red' };
     }
@@ -334,12 +375,23 @@
       const container = document.getElementById('winesContainer');
       const countText = document.getElementById('countText');
       const sortSelect = document.getElementById('sortSelect');
+      const searchInput = document.getElementById('searchInput');
       const sortMode = sortSelect ? sortSelect.value : 'name_asc';
+      const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
       let filtered = (allWines || []).filter(w => {
         if (!w) return false;
-        if (activeFilters.has('ALL')) return true;
-        return activeFilters.has(resolveWineType(w).key);
+        const typeMatch = activeFilters.has('ALL') || activeFilters.has(resolveWineType(w).key);
+        if (!typeMatch) return false;
+        if (!keyword) return true;
+
+        const targetStr = [
+          w.name_ko, w.name_en, w.producer, w.country, w.region,
+          Array.isArray(w.grape_varieties) ? w.grape_varieties.join(' ') : w.grape_varieties,
+          w.vintage, w.notes
+        ].join(' ').toLowerCase();
+
+        return targetStr.includes(keyword);
       });
 
       filtered.sort((a, b) => {
@@ -355,7 +407,7 @@
 
       if (countText) countText.innerText = '보관 중인 와인 (' + filtered.length + '병 / 전체 ' + allWines.length + '병)';
       if (filtered.length === 0) {
-        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">해당 분류의 와인이 없습니다.</p>';
+        container.innerHTML = '<p style="text-align: center; color: #868e96; padding: 40px;">조건에 맞는 와인이 없습니다.</p>';
         return;
       }
 
@@ -365,12 +417,15 @@
         const vintageStr = w.vintage ? w.vintage : 'NV';
         const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
         
-        // 🔍 클릭 시 확대 모달 실행 이벤트 바인딩
         const thumbHtml = hasValidImg ? '<img src="' + w.image_url + '" class="wine-thumb" alt="label" onclick="openImageModal(\'' + w.image_url + '\', event)">' : '<div class="wine-thumb-placeholder">🍷</div>';
         const detailImgHtml = hasValidImg ? '<div class="detail-img-box" onclick="openImageModal(\'' + w.image_url + '\', event)"><img src="' + w.image_url + '" class="detail-large-img" alt="label"><div class="zoom-hint">🔍 터치하여 크게 보기</div></div>' : '';
         
         const curPriceText = formatPrice(w.purchase_price);
         let varieties = Array.isArray(w.grape_varieties) ? w.grape_varieties.join(', ') : (w.grape_varieties || '-');
+
+        let notes = typeof w.tasting_notes === 'string' ? JSON.parse(w.tasting_notes || '{}') : (w.tasting_notes || {});
+        let aromas = Array.isArray(notes.aroma) ? notes.aroma : [];
+        let aromaHtml = aromas.length > 0 ? aromas.map(a => '<span class="tag">#' + a + '</span>').join('') : '<span style="color:#adb5bd; font-size:12px;">등록된 아로마 없음</span>';
 
         html += '<div class="wine-card" onclick="toggleCard(this)">';
         html += '  <div class="wine-summary">' + thumbHtml;
@@ -378,7 +433,7 @@
         html += '      <div class="wine-tag-row"><span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span></div>';
         html += '      <div class="wine-name">' + (w.name_ko || w.name_en || '이름 미지정') + '</div>';
         if (w.name_en) html += '<div class="wine-name-en">' + w.name_en + '</div>';
-        html += '      <div class="wine-sub-text">' + (w.country || '') + ' ❯ ' + (w.producer || '') + (w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : '') + '</div>';
+        html += '      <div class="wine-sub-text">' + (w.country || '') + (w.producer ? ' ❯ ' + w.producer : '') + (w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : '') + '</div>';
         html += '    </div>';
         html += '    <div class="wine-badge-box"><span class="badge-vintage">' + vintageStr + '</span><span class="arrow">▼</span></div>';
         html += '  </div>';
@@ -390,8 +445,20 @@
         html += '      <tr><td class="k">🏭 생산자</td><td>' + (w.producer || '-') + '</td></tr>';
         html += '      <tr><td class="k">⏳ 시음적기</td><td><b>' + (w.drinking_window_start || '?') + '년 ~ ' + (w.drinking_window_end || '?') + '년</b></td></tr>';
         html += '    </table>';
+
+        html += '    <div class="note-box">';
+        html += '      <div class="note-label">👃 아로마 & 테이스팅 프로필</div>';
+        html += '      <div class="aroma-tags">' + aromaHtml + '</div>';
+        html += '      <div class="gauge-grid">';
+        html += '        <div class="gauge-item"><span>바디감</span><span class="gauge-dots">' + makeDots(notes.body) + '</span></div>';
+        html += '        <div class="gauge-item"><span>타닌</span><span class="gauge-dots">' + makeDots(notes.tannin) + '</span></div>';
+        html += '        <div class="gauge-item"><span>산도</span><span class="gauge-dots">' + makeDots(notes.acidity) + '</span></div>';
+        html += '        <div class="gauge-item"><span>당도</span><span class="gauge-dots">' + makeDots(notes.sweetness) + '</span></div>';
+        html += '      </div>';
+        html += '    </div>';
+
         html += '    <div class="user-info-panel">';
-        html += '      <div class="panel-header"><span class="panel-title">✏️ 상세 데이터 직접 수정</span><button type="button" class="btn-edit-toggle" onclick="toggleEditMode(\'' + w.id + '\', true)">수정하기</button></div>';
+        html += '      <div class="panel-header"><span class="panel-title">✏️ 상세 데이터 관리</span><button type="button" class="btn-edit-toggle" onclick="toggleEditMode(\'' + w.id + '\', true)">수정하기</button></div>';
         html += '      <table class="info-view-table" id="viewBox_' + w.id + '">';
         html += '        <tr><td class="lbl">타입</td><td><b>' + typeInfo.label + '</b></td></tr>';
         html += '        <tr><td class="lbl">빈티지</td><td><b>' + (w.vintage || 'NV (미지정)') + '</b></td></tr>';
@@ -400,6 +467,7 @@
         html += '        <tr><td class="lbl">메모</td><td>' + (w.notes || '-') + '</td></tr>';
         html += '      </table>';
         html += '      <div class="info-edit-form" id="editBox_' + w.id + '">';
+        html += '        <button type="button" class="btn-ai-autofill" id="btnAuto_' + w.id + '" onclick="autoFillSpecByName(\'' + w.id + '\')">🪄 와인 이름으로 AI 상세스펙 자동 채우기</button>';
         html += '        <div class="info-input-row">';
         html += '          <div class="info-field"><label>한국어 이름</label><input type="text" id="inp_name_ko_' + w.id + '" value="' + (w.name_ko || '') + '"></div>';
         html += '          <div class="info-field"><label>원어/영어 이름</label><input type="text" id="inp_name_en_' + w.id + '" value="' + (w.name_en || '') + '"></div>';
@@ -446,6 +514,73 @@
     function toggleEditMode(wineId, isEdit) {
       document.getElementById('viewBox_' + wineId).style.display = isEdit ? 'none' : 'table';
       document.getElementById('editBox_' + wineId).style.display = isEdit ? 'flex' : 'none';
+    }
+
+    // 🪄 기존 잘못된 와인 데이터를 이름 기반으로 즉시 교정하는 AI 함수
+    async function autoFillSpecByName(wineId) {
+      const nameKo = document.getElementById('inp_name_ko_' + wineId).value.trim();
+      const nameEn = document.getElementById('inp_name_en_' + wineId).value.trim();
+      const vintage = document.getElementById('inp_vintage_' + wineId).value.trim();
+      const targetName = (nameKo + ' ' + nameEn).trim();
+
+      if (!targetName) {
+        alert('한국어 이름 또는 원어 이름을 먼저 입력해 주세요.');
+        return;
+      }
+
+      const btn = document.getElementById('btnAuto_' + wineId);
+      const origText = btn.innerText;
+      btn.innerText = '⏳ AI 지식베이스 조회 중...';
+      btn.disabled = true;
+
+      const prompt = `와인 명칭 "${targetName}" (빈티지: ${vintage || '미상'})에 대한 정확한 정보를 당신의 와인 백과사전 지식으로 완성해 순수 JSON으로만 응답하세요.
+{
+  "name_ko": "정식 한국어 명칭",
+  "name_en": "정식 원어/영어 명칭",
+  "wine_type": "Red 또는 White 또는 Rose 또는 Sparkling 또는 Dessert 중 택1",
+  "country": "생산 국가",
+  "region": "세부 지역",
+  "producer": "생산자",
+  "grape_varieties": ["대표 품종"],
+  "drinking_window_start": 2026,
+  "drinking_window_end": 2040,
+  "tasting_notes": {
+    "aroma": ["대표아로마1", "대표아로마2", "대표아로마3"],
+    "body": 4,
+    "tannin": 4,
+    "acidity": 4,
+    "sweetness": 1
+  }
+}`;
+
+      try {
+        const raw = await executeGeminiTextOnly(prompt, true);
+        const parsed = JSON.parse(raw.replace(/```json/gi, '').replace(/```/g, '').trim());
+
+        if (parsed.name_ko) document.getElementById('inp_name_ko_' + wineId).value = parsed.name_ko;
+        if (parsed.name_en) document.getElementById('inp_name_en_' + wineId).value = parsed.name_en;
+        if (parsed.wine_type) document.getElementById('inp_type_' + wineId).value = parsed.wine_type;
+        if (parsed.country) document.getElementById('inp_country_' + wineId).value = parsed.country;
+        if (parsed.region) document.getElementById('inp_region_' + wineId).value = parsed.region;
+        if (parsed.producer) document.getElementById('inp_producer_' + wineId).value = parsed.producer;
+        if (Array.isArray(parsed.grape_varieties)) {
+          document.getElementById('inp_varieties_' + wineId).value = parsed.grape_varieties.join(', ');
+        }
+
+        // 테이스팅 노트 및 시음적기는 DB에 바로 반영 준비
+        await sb.from('wines').update({
+          tasting_notes: parsed.tasting_notes || null,
+          drinking_window_start: parsed.drinking_window_start || null,
+          drinking_window_end: parsed.drinking_window_end || null
+        }).eq('id', wineId);
+
+        alert('스펙을 자동으로 채웠습니다. 내용을 확인 후 [💾 저장]을 눌러주세요!');
+      } catch (err) {
+        alert('자동 채우기 실패: ' + err.message);
+      } finally {
+        btn.innerText = origText;
+        btn.disabled = false;
+      }
     }
 
     async function saveWineMeta(wineId) {
@@ -505,6 +640,78 @@
       } catch (err) {
         container.innerHTML = '<p style="text-align: center; color: #fa5252; padding: 40px;">목록을 불러오지 못했습니다.<br><small>' + err.message + '</small></p>';
       }
+    }
+
+    // 🤖 내 셀러 보유 와인 기반 AI 소믈리에 추천
+    function setSommPrompt(txt) {
+      document.getElementById('sommQuery').value = txt;
+    }
+
+    async function askSommelier() {
+      const q = document.getElementById('sommQuery').value.trim();
+      if (!q) { alert('질문이나 추천받고 싶은 상황을 입력해 주세요.'); return; }
+      if (!allWines || allWines.length === 0) { alert('보관 중인 와인 데이터가 없습니다.'); return; }
+
+      const btn = document.getElementById('sommBtn');
+      const resBox = document.getElementById('sommResultBox');
+      btn.disabled = true;
+      btn.innerText = '⏳ 내 셀러 와인 리스트 분석 중...';
+      resBox.style.display = 'block';
+      resBox.innerText = '보관 중인 ' + allWines.length + '병의 와인 데이터를 대조하여 최적의 와인을 선별하고 있습니다...';
+
+      const inventoryList = allWines.map((w, idx) => {
+        const t = resolveWineType(w).label;
+        const v = w.vintage || 'NV';
+        const gr = Array.isArray(w.grape_varieties) ? w.grape_varieties.join('/') : (w.grape_varieties || '');
+        return `${idx + 1}. [${t}] ${w.name_ko || w.name_en} (${w.name_en || ''}) | 빈티지: ${v} | 국가/지역: ${w.country || ''}/${w.region || ''} | 품종: ${gr}`;
+      }).join('\n');
+
+      const prompt = `당신은 사용자의 개인 와인 셀러 전담 마스터 소믈리에입니다.
+아래는 현재 사용자의 셀러에 실제로 보관되어 있는 와인 목록입니다:
+
+[보유 와인 리스트]
+${inventoryList}
+
+[사용자 요청]
+"${q}"
+
+위 [보유 와인 리스트]에 있는 와인 중에서만 사용자의 요청에 가장 잘 부합하는 와인 1~3병을 엄선하여 추천해 주세요.
+각 추천 와인에 대해:
+1. 추천 와인명과 빈티지
+2. 추천 이유 (당도, 산도, 바디감, 음식과의 조화 등)
+3. 권장 서빙 온도 및 브리딩/칠링 팁
+을 깔끔하고 읽기 편하게 정리해 주세요.`;
+
+      try {
+        const answer = await executeGeminiTextOnly(prompt, false);
+        resBox.innerText = answer.trim();
+      } catch (err) {
+        resBox.innerText = '❌ 추천 생성 실패: ' + err.message;
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '내 셀러에서 와인 추천받기 🍷';
+      }
+    }
+
+    async function executeGeminiTextOnly(promptText, isJson) {
+      const apiKey = getApiKey();
+      if (!apiKey) throw new Error('상단의 [🔑 키 설정] 버튼을 눌러 API 키를 먼저 입력해 주세요.');
+
+      const genConfig = { temperature: 0.2 };
+      if (isJson) genConfig.responseMimeType = "application/json";
+
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }],
+          generationConfig: genConfig
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error ? data.error.message : ('HTTP ' + res.status));
+      return data.candidates[0].content.parts[0].text;
     }
 
     function resizeImage(file) {
@@ -616,7 +823,6 @@
       }
     }
 
-    // 🍷 와인 전문 소믈리에 지식베이스 프롬프트 (로제 포함)
     async function analyzeAndSave() {
       if (processedImages.length === 0) return;
       const status = document.getElementById('statusBox');
@@ -629,7 +835,7 @@
 
       const prompt = `당신은 최고 수준의 와인 전문가(Master Sommelier)입니다.
 업로드된 라벨 사진을 인식하여 어떤 와인인지 식별한 후, 당신의 방대한 와인 지식베이스를 동원해 세부 스펙을 완성하세요.
-라벨에 품종이나 국가가 직접 적혀있지 않더라도, 식별된 와인의 정식 규격(DOCG/AOC/AVA 등)과 생산자 정보를 기반으로 정확한 국가, 지역, 대표 품종, 와인 타입을 채워넣으세요.
+라벨에 품종이나 국가가 직접 적혀있지 않더라도, 식별된 와인의 정식 규격(DOCG/AOC/AVA 등)과 생산자 정보를 기반으로 정확한 국가, 지역, 대표 품종, 와인 타입, 테이스팅 프로필을 채워넣으세요.
 빈티지는 라벨에 적힌 연도(4자리 숫자)를 최우선으로 읽고, 숫자가 보이지 않으면 null로 하세요.
 
 반드시 아래 JSON 형식으로만 응답하세요:
@@ -643,7 +849,14 @@
   "grape_varieties": ["대표 포도 품종 배열 (예: 산지오베제 100%, 카베르네 소비뇽 등)"],
   "vintage": 2020 또는 null,
   "drinking_window_start": 2026,
-  "drinking_window_end": 2045
+  "drinking_window_end": 2045,
+  "tasting_notes": {
+    "aroma": ["체리", "가죽", "바닐라"],
+    "body": 5,
+    "tannin": 5,
+    "acidity": 4,
+    "sweetness": 1
+  }
 }`;
 
       for (let i = 0; i < total; i++) {
