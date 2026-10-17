@@ -56,6 +56,7 @@
     .type-sparkling { background: #fff3bf; color: #d9480f; }
     .type-rose { background: #fcc2d7; color: #a61e4d; }
     .type-dessert { background: #f3d9fa; color: #862e9c; }
+    .date-tag { font-size: 10px; color: #868e96; font-weight: 500; }
 
     .wine-name { font-size: 15px; font-weight: 700; color: #111; line-height: 1.35; margin-bottom: 2px; word-break: keep-all; }
     .wine-name-en { font-size: 12px; font-weight: 500; color: #495057; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -121,15 +122,14 @@
     .del-thumb { position: absolute; top: -5px; right: -5px; background: #fa5252; color: #fff; border: none; border-radius: 50%; width: 22px; height: 22px; font-size: 12px; font-weight: 700; cursor: pointer; }
     #statusBox { margin-top: 16px; font-size: 13px; text-align: left; background: #f8f9fa; padding: 14px; border-radius: 8px; display: none; line-height: 1.6; border: 1px solid #e9ecef; }
 
-    /* 🤖 AI 소믈리에 탭 스타일 */
     .quick-prompts { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
     .q-chip { background: #f8f9fa; border: 1px solid #dee2e6; padding: 6px 10px; border-radius: 16px; font-size: 12px; font-weight: 600; color: #495057; cursor: pointer; }
     .q-chip:hover { border-color: #800020; color: #800020; }
     .somm-input { width: 100%; padding: 12px; border: 1px solid #ced4da; border-radius: 10px; font-size: 14px; outline: none; margin-bottom: 10px; resize: none; }
     .somm-btn { width: 100%; padding: 13px; background: #800020; color: #fff; border: none; border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; }
+    .somm-btn:disabled { background: #adb5bd; cursor: not-allowed; }
     #sommResultBox { margin-top: 16px; background: #fafbfc; border: 1px solid #e9ecef; border-radius: 10px; padding: 14px; font-size: 14px; line-height: 1.65; white-space: pre-wrap; display: none; }
 
-    /* 🔍 사진 확대 라이트박스 모달 */
     #imageModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.88); z-index: 100000; align-items: center; justify-content: center; padding: 16px; cursor: zoom-out; }
     #modalImg { max-width: 95%; max-height: 85%; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); object-fit: contain; }
     .modal-close-btn { position: absolute; top: 16px; right: 20px; color: #fff; font-size: 32px; font-weight: 800; cursor: pointer; }
@@ -177,6 +177,8 @@
         <div class="sort-row">
           <span class="sort-label">정렬 기준</span>
           <select id="sortSelect" class="sort-select" onchange="applyFilterAndSort()">
+            <option value="created_desc">등록 최신순</option>
+            <option value="created_asc">등록 오래된순</option>
             <option value="name_asc">이름 가나다순</option>
             <option value="name_desc">이름 역순</option>
             <option value="country_asc">국가별 (가나다)</option>
@@ -195,10 +197,10 @@
       </div>
     </div>
 
-    <!-- 2. AI 소믈리에 추천 섹션 (보유 와인 DB 직접 연동) -->
+    <!-- 2. AI 소믈리에 추천 섹션 -->
     <div id="tabSommelierSection">
       <h3 style="margin-bottom: 6px; font-size: 17px; color: #800020;">🤖 내 셀러 맞춤 소믈리에</h3>
-      <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">현재 셀러에 보관 중인 와인 리스트를 기반으로 상황에 딱 맞는 와인을 골라줍니다.</p>
+      <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">현재 셀러에 보관 중인 와인 리스트를 기반으로 상황에 딱 맞는 와인을 골라줍니다. (서버 지연 시 자동 재시도)</p>
       
       <div class="quick-prompts">
         <span class="q-chip" onclick="setSommPrompt('여성분들이 점심식사와 같이 마실 당도가 있거나 부드러운 와인 추천해줘')">🥗 여성 점심 모임 (당도/부드러움)</span>
@@ -314,6 +316,17 @@
       return "●".repeat(n) + "○".repeat(5 - n);
     }
 
+    // 📅 등록 일자 포맷 함수 (YYYY. MM. DD.)
+    function formatDate(isoStr) {
+      if (!isoStr) return '-';
+      const d = new Date(isoStr);
+      if (isNaN(d.getTime())) return '-';
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}. ${mm}. ${dd}.`;
+    }
+
     function openImageModal(imgSrc, e) {
       if (e) e.stopPropagation();
       if (!imgSrc) return;
@@ -376,7 +389,7 @@
       const countText = document.getElementById('countText');
       const sortSelect = document.getElementById('sortSelect');
       const searchInput = document.getElementById('searchInput');
-      const sortMode = sortSelect ? sortSelect.value : 'name_asc';
+      const sortMode = sortSelect ? sortSelect.value : 'created_desc';
       const keyword = searchInput ? searchInput.value.trim().toLowerCase() : '';
 
       let filtered = (allWines || []).filter(w => {
@@ -397,6 +410,11 @@
       filtered.sort((a, b) => {
         const nA = String(a.name_ko || a.name_en || '');
         const nB = String(b.name_ko || b.name_en || '');
+        const tA = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+        if (sortMode === 'created_desc') return tB - tA;
+        if (sortMode === 'created_asc') return tA - tB;
         if (sortMode === 'name_asc') return nA.localeCompare(nB, 'ko');
         if (sortMode === 'name_desc') return nB.localeCompare(nA, 'ko');
         if (sortMode === 'country_asc') return String(a.country || '').localeCompare(String(b.country || ''), 'ko');
@@ -415,6 +433,7 @@
       filtered.forEach(w => {
         const typeInfo = resolveWineType(w);
         const vintageStr = w.vintage ? w.vintage : 'NV';
+        const regDateStr = formatDate(w.created_at);
         const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
         
         const thumbHtml = hasValidImg ? '<img src="' + w.image_url + '" class="wine-thumb" alt="label" onclick="openImageModal(\'' + w.image_url + '\', event)">' : '<div class="wine-thumb-placeholder">🍷</div>';
@@ -430,7 +449,10 @@
         html += '<div class="wine-card" onclick="toggleCard(this)">';
         html += '  <div class="wine-summary">' + thumbHtml;
         html += '    <div class="wine-name-box">';
-        html += '      <div class="wine-tag-row"><span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span></div>';
+        html += '      <div class="wine-tag-row">';
+        html += '        <span class="type-badge ' + typeInfo.cls + '">' + typeInfo.label + '</span>';
+        html += '        <span class="date-tag">📅 ' + regDateStr + '</span>';
+        html += '      </div>';
         html += '      <div class="wine-name">' + (w.name_ko || w.name_en || '이름 미지정') + '</div>';
         if (w.name_en) html += '<div class="wine-name-en">' + w.name_en + '</div>';
         html += '      <div class="wine-sub-text">' + (w.country || '') + (w.producer ? ' ❯ ' + w.producer : '') + (w.purchase_price ? ' · <b style="color:#800020;">' + curPriceText + '</b>' : '') + '</div>';
@@ -460,6 +482,7 @@
         html += '    <div class="user-info-panel">';
         html += '      <div class="panel-header"><span class="panel-title">✏️ 상세 데이터 관리</span><button type="button" class="btn-edit-toggle" onclick="toggleEditMode(\'' + w.id + '\', true)">수정하기</button></div>';
         html += '      <table class="info-view-table" id="viewBox_' + w.id + '">';
+        html += '        <tr><td class="lbl">등록 일자</td><td><b>' + regDateStr + '</b></td></tr>';
         html += '        <tr><td class="lbl">타입</td><td><b>' + typeInfo.label + '</b></td></tr>';
         html += '        <tr><td class="lbl">빈티지</td><td><b>' + (w.vintage || 'NV (미지정)') + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매 가격</td><td><b>' + curPriceText + '</b></td></tr>';
@@ -516,7 +539,7 @@
       document.getElementById('editBox_' + wineId).style.display = isEdit ? 'flex' : 'none';
     }
 
-    // 🪄 기존 잘못된 와인 데이터를 이름 기반으로 즉시 교정하는 AI 함수
+    // 🪄 자동 재시도가 포함된 AI 상세스펙 자동 채우기
     async function autoFillSpecByName(wineId) {
       const nameKo = document.getElementById('inp_name_ko_' + wineId).value.trim();
       const nameEn = document.getElementById('inp_name_en_' + wineId).value.trim();
@@ -554,7 +577,9 @@
 }`;
 
       try {
-        const raw = await executeGeminiTextOnly(prompt, true);
+        const raw = await executeGeminiTextWithRetry(prompt, true, (att, maxAtt, sec) => {
+          btn.innerText = `⏳ 서버 혼잡: ${sec}초 후 자동 재시도 (${att}/${maxAtt})...`;
+        });
         const parsed = JSON.parse(raw.replace(/```json/gi, '').replace(/```/g, '').trim());
 
         if (parsed.name_ko) document.getElementById('inp_name_ko_' + wineId).value = parsed.name_ko;
@@ -567,7 +592,6 @@
           document.getElementById('inp_varieties_' + wineId).value = parsed.grape_varieties.join(', ');
         }
 
-        // 테이스팅 노트 및 시음적기는 DB에 바로 반영 준비
         await sb.from('wines').update({
           tasting_notes: parsed.tasting_notes || null,
           drinking_window_start: parsed.drinking_window_start || null,
@@ -642,11 +666,11 @@
       }
     }
 
-    // 🤖 내 셀러 보유 와인 기반 AI 소믈리에 추천
     function setSommPrompt(txt) {
       document.getElementById('sommQuery').value = txt;
     }
 
+    // 🤖 내 셀러 보유 와인 기반 AI 소믈리에 추천 (자동 재시도 내장)
     async function askSommelier() {
       const q = document.getElementById('sommQuery').value.trim();
       if (!q) { alert('질문이나 추천받고 싶은 상황을 입력해 주세요.'); return; }
@@ -683,7 +707,10 @@ ${inventoryList}
 을 깔끔하고 읽기 편하게 정리해 주세요.`;
 
       try {
-        const answer = await executeGeminiTextOnly(prompt, false);
+        const answer = await executeGeminiTextWithRetry(prompt, false, (att, maxAtt, sec) => {
+          btn.innerText = `⏳ 서버 대기: ${sec}초 후 자동 재시도 (${att}/${maxAtt})...`;
+          resBox.innerText = `⏳ 구글 AI 서버 응답 지연으로 자동 재시도 중입니다 (${att}/${maxAtt})... 잠시만 기다려 주세요.`;
+        });
         resBox.innerText = answer.trim();
       } catch (err) {
         resBox.innerText = '❌ 추천 생성 실패: ' + err.message;
@@ -693,25 +720,54 @@ ${inventoryList}
       }
     }
 
-    async function executeGeminiTextOnly(promptText, isJson) {
+    // 🔄 텍스트 전용 호출 자동 재시도 엔진 (최대 4회 지수 백오프)
+    async function executeGeminiTextWithRetry(promptText, isJson, onRetryStatus) {
       const apiKey = getApiKey();
       if (!apiKey) throw new Error('상단의 [🔑 키 설정] 버튼을 눌러 API 키를 먼저 입력해 주세요.');
 
       const genConfig = { temperature: 0.2 };
       if (isJson) genConfig.responseMimeType = "application/json";
 
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          generationConfig: genConfig
-        })
-      });
-      const data = await res.json();
-      if (!res.ok || data.error) throw new Error(data.error ? data.error.message : ('HTTP ' + res.status));
-      return data.candidates[0].content.parts[0].text;
+      const maxRetries = 4;
+      let delayMs = 1500;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent';
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: promptText }] }],
+              generationConfig: genConfig
+            })
+          });
+          const data = await res.json();
+
+          if (res.status === 503 || res.status === 429 || (data.error && data.error.message && (data.error.message.includes('high demand') || data.error.message.includes('overloaded')))) {
+            if (attempt < maxRetries) {
+              if (onRetryStatus) onRetryStatus(attempt, maxRetries, Math.round(delayMs / 1000));
+              await new Promise(r => setTimeout(r, delayMs));
+              delayMs *= 2;
+              continue;
+            }
+          }
+
+          if (!res.ok || data.error) {
+            throw new Error(data.error ? data.error.message : ('HTTP ' + res.status));
+          }
+
+          if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+            return data.candidates[0].content.parts[0].text;
+          }
+          throw new Error('AI 응답이 비어 있습니다.');
+        } catch (err) {
+          if (attempt === maxRetries) throw err;
+          if (onRetryStatus) onRetryStatus(attempt, maxRetries, Math.round(delayMs / 1000));
+          await new Promise(r => setTimeout(r, delayMs));
+          delayMs *= 2;
+        }
+      }
     }
 
     function resizeImage(file) {
@@ -770,7 +826,7 @@ ${inventoryList}
         throw new Error('API 키가 설정되지 않았습니다. 상단의 [🔑 키 설정] 버튼을 눌러 입력해 주세요.');
       }
 
-      const maxRetries = 3;
+      const maxRetries = 4;
       let delayMs = 1500;
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -798,7 +854,7 @@ ${inventoryList}
 
           const data = await res.json();
 
-          if (res.status === 503 || (data.error && data.error.message && data.error.message.includes('high demand'))) {
+          if (res.status === 503 || res.status === 429 || (data.error && data.error.message && (data.error.message.includes('high demand') || data.error.message.includes('overloaded')))) {
             if (attempt < maxRetries) {
               if (onRetryStatus) onRetryStatus(attempt, maxRetries, Math.round(delayMs / 1000));
               await new Promise(r => setTimeout(r, delayMs));
@@ -817,6 +873,7 @@ ${inventoryList}
           throw new Error('AI 분석 결과 데이터가 비어 있습니다.');
         } catch (err) {
           if (attempt === maxRetries) throw err;
+          if (onRetryStatus) onRetryStatus(attempt, maxRetries, Math.round(delayMs / 1000));
           await new Promise(r => setTimeout(r, delayMs));
           delayMs *= 2;
         }
