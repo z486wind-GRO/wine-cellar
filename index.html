@@ -44,8 +44,11 @@
     .sort-label { font-size: 13px; font-weight: 700; color: #495057; }
     .sort-select { padding: 6px 10px; border-radius: 8px; border: 1px solid #ced4da; font-size: 13px; font-weight: 600; }
 
-    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; font-size: 14px; font-weight: 700; color: #333; }
+    .header-bar { display: flex; justify-content: space-between; align-items: center; padding: 4px 2px 12px; font-size: 13px; font-weight: 700; color: #333; flex-wrap: wrap; gap: 6px; }
+    .header-bar-btns { display: flex; gap: 6px; }
     .reload-btn { background: #800020; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .batch-btn { background: #5f3dc4; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; }
+    .batch-btn:disabled { background: #adb5bd; }
 
     .wine-card { background: #fff; border-radius: 12px; margin-bottom: 10px; border: 1px solid #e1e4e8; overflow: hidden; }
     .wine-summary { padding: 12px 14px; display: flex; align-items: center; gap: 12px; cursor: pointer; }
@@ -112,7 +115,8 @@
 
     .section-divider { font-size: 11px; font-weight: 800; color: #800020; background: #f8f9fa; padding: 6px 8px; border-radius: 6px; margin-top: 4px; border-left: 3px solid #800020; }
 
-    .btn-ai-autofill { background: #f3f0ff; color: #5f3dc4; border: 1px solid #d0bfff; padding: 9px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; margin-bottom: 4px; }
+    .btn-ai-autofill { background: #5f3dc4; color: #fff; border: none; padding: 10px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; text-align: center; margin-bottom: 4px; box-shadow: 0 2px 4px rgba(95,61,196,0.25); }
+    .btn-ai-autofill:disabled { background: #adb5bd; }
     .edit-actions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 6px; }
     .btn-save-info { background: #800020; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
     .btn-save-taste { background: #2b8a3e; color: #fff; border: none; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
@@ -177,7 +181,6 @@
 
     <!-- 1. 컬렉션 목록 섹션 -->
     <div id="tabListSection">
-      <!-- 🍾 보관 중 vs 🥂 마신 와인 전환 탭 -->
       <div class="status-switch">
         <button type="button" class="status-btn active" id="statusBtnStored" onclick="switchInventoryStatus('stored')">🍾 셀러 보관 중</button>
         <button type="button" class="status-btn" id="statusBtnTasted" onclick="switchInventoryStatus('tasted')">🥂 마신 와인 아카이브</button>
@@ -209,7 +212,10 @@
 
       <div class="header-bar">
         <span id="countText">🍷 컬렉션 조회 중...</span>
-        <button type="button" class="reload-btn" onclick="fetchWines()">새로고침</button>
+        <div class="header-bar-btns">
+          <button type="button" class="batch-btn" id="batchUpdateBtn" onclick="batchFillMissingProfiles()">🪄 미네랄/피니쉬 누락분 일괄채우기</button>
+          <button type="button" class="reload-btn" onclick="fetchWines()">새로고침</button>
+        </div>
       </div>
       <div id="winesContainer">
         <p style="text-align: center; color: #868e96; padding: 40px;">데이터를 조회하고 있습니다...</p>
@@ -219,7 +225,7 @@
     <!-- 2. AI 소믈리에 추천 섹션 -->
     <div id="tabSommelierSection">
       <h3 style="margin-bottom: 6px; font-size: 17px; color: #800020;">🤖 내 셀러 맞춤 소믈리에</h3>
-      <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">현재 셀러에 <b>보관 중인 와인 리스트</b>를 기반으로 상황에 딱 맞는 와인을 골라줍니다. (서버 지연 시 자동 재시도)</p>
+      <p style="font-size: 12px; color: #6c757d; margin-bottom: 12px;">현재 셀러에 <b>보관 중인 와인 리스트</b>를 기반으로 상황에 딱 맞는 와인을 골라줍니다.</p>
       
       <div class="quick-prompts">
         <span class="q-chip" onclick="setSommPrompt('여성분들이 점심식사와 같이 마실 당도가 있거나 부드러운 와인 추천해줘')">🥗 여성 점심 모임 (당도/부드러움)</span>
@@ -262,7 +268,7 @@
     let allWines = [];
     let processedImages = [];
     let activeFilters = new Set(['ALL']);
-    let currentInventoryMode = 'stored'; // 'stored' (보관 중) | 'tasted' (마신 와인)
+    let currentInventoryMode = 'stored';
 
     function getApiKey() {
       return localStorage.getItem('cellar_gemini_key') || '';
@@ -325,7 +331,6 @@
       if (tab === 'list') fetchWines();
     }
 
-    // 🍾 보관 중 vs 🥂 마신 와인 전환
     function switchInventoryStatus(mode) {
       currentInventoryMode = mode;
       document.getElementById('statusBtnStored').classList.toggle('active', mode === 'stored');
@@ -401,6 +406,14 @@
       if (!val) return '-';
       const clean = String(val).replace(/,/g, '').trim();
       return (!isNaN(clean) && clean !== '') ? '₩' + Number(clean).toLocaleString() : val;
+    }
+
+    // 🛠️ 안전한 JSON 파서 (배열 래핑 방어 포함)
+    function safeParseJson(rawStr) {
+      const cleaned = String(rawStr || '').replace(/```json/gi, '').replace(/```/g, '').trim();
+      let parsed = JSON.parse(cleaned);
+      if (Array.isArray(parsed)) parsed = parsed[0] || {};
+      return parsed;
     }
 
     function toggleFilter(type) {
@@ -500,13 +513,12 @@
         let aromaHtml = aromas.length > 0 ? aromas.map(a => '<span class="tag">#' + a + '</span>').join('') : '<span style="color:#adb5bd; font-size:12px;">등록된 아로마 없음</span>';
         let aromaStr = aromas.join(', ');
 
-        // 🥂 사용자 시음 프로파일 (user_review)
         let uRev = notes.user_review || {};
         let uAromas = Array.isArray(uRev.aroma) ? uRev.aroma : [];
         let uAromaHtml = uAromas.length > 0 ? uAromas.map(a => '<span class="my-tag">#' + a + '</span>').join('') : '<span style="color:#adb5bd; font-size:12px;">미입력</span>';
         let uAromaStr = uAromas.join(', ');
 
-        html += '<div class="wine-card" onclick="toggleCard(this)">';
+        html += '<div class="wine-card" id="card_' + w.id + '" onclick="toggleCard(this)">';
         html += '  <div class="wine-summary">' + thumbHtml;
         html += '    <div class="wine-name-box">';
         html += '      <div class="wine-tag-row">';
@@ -529,7 +541,6 @@
         html += '      <tr><td class="k">⏳ 시음적기</td><td><b>' + (w.drinking_window_start || '?') + '년 ~ ' + (w.drinking_window_end || '?') + '년</b></td></tr>';
         html += '    </table>';
 
-        // 1. 기본 아로마 & 6대 테이스팅 프로필 (미네랄, 피니쉬 포함)
         html += '    <div class="note-box">';
         html += '      <div class="note-label"><span>👃 기본 아로마 & 테이스팅 프로필</span></div>';
         html += '      <div class="aroma-tags">' + aromaHtml + '</div>';
@@ -543,7 +554,6 @@
         html += '      </div>';
         html += '    </div>';
 
-        // 2. 🥂 나의 테이스팅 프로필 & 시음 완료 관리 패널
         html += '    <div class="my-note-box">';
         html += '      <div class="panel-header" style="border-bottom-color:#ffe066;">';
         html += '        <span class="panel-title" style="color:#d9480f;">🥂 나의 시음 테이스팅 프로필</span>';
@@ -570,7 +580,6 @@
         }
         html += '      </div>';
 
-        // 시음 기록 입력 폼
         html += '      <div class="info-edit-form" id="tasteEdit_' + w.id + '">';
         html += '        <div class="info-input-row">';
         html += '          <div class="info-field"><label>시음 일자</label><input type="date" id="t_date_' + w.id + '" value="' + (uRev.tasted_date || getTodayYMD()) + '"></div>';
@@ -596,7 +605,6 @@
         html += '      </div>';
         html += '    </div>';
 
-        // 3. 기본 스펙 & 구매 정보 수정 패널
         html += '    <div class="user-info-panel">';
         html += '      <div class="panel-header"><span class="panel-title">✏️ 와인 기본 스펙 & 구매 정보 관리</span><button type="button" class="btn-edit-toggle" onclick="toggleEditMode(\'' + w.id + '\', true)">수정하기</button></div>';
         html += '      <table class="info-view-table" id="viewBox_' + w.id + '">';
@@ -608,7 +616,7 @@
         html += '        <tr><td class="lbl">메모</td><td>' + (w.notes || '-') + '</td></tr>';
         html += '      </table>';
         html += '      <div class="info-edit-form" id="editBox_' + w.id + '">';
-        html += '        <button type="button" class="btn-ai-autofill" id="btnAuto_' + w.id + '" onclick="autoFillSpecByName(\'' + w.id + '\')">🪄 와인 이름으로 AI 상세스펙 + 6대 테이스팅 자동 채우기</button>';
+        html += '        <button type="button" class="btn-ai-autofill" id="btnAuto_' + w.id + '" onclick="autoFillSpecByName(\'' + w.id + '\')">🪄 AI로 상세스펙 + 6대 프로필 채우고 즉시 DB 저장</button>';
         html += '        <div class="info-input-row">';
         html += '          <div class="info-field"><label>한국어 이름</label><input type="text" id="inp_name_ko_' + w.id + '" value="' + (w.name_ko || '') + '"></div>';
         html += '          <div class="info-field"><label>원어/영어 이름</label><input type="text" id="inp_name_en_' + w.id + '" value="' + (w.name_en || '') + '"></div>';
@@ -655,7 +663,7 @@
         html += '          <div class="info-field"><label>구매처</label><input type="text" id="inp_place_' + w.id + '" value="' + (w.purchase_place || '') + '"></div>';
         html += '        </div>';
         html += '        <div class="info-field"><label>메모</label><textarea id="inp_memo_' + w.id + '" rows="2">' + (w.notes || '') + '</textarea></div>';
-        html += '        <div class="edit-actions"><button type="button" class="btn-cancel-info" onclick="toggleEditMode(\'' + w.id + '\', false)">취소</button><button type="button" class="btn-save-info" onclick="saveWineMeta(\'' + w.id + '\')">💾 스펙 및 프로필 저장</button></div>';
+        html += '        <div class="edit-actions"><button type="button" class="btn-cancel-info" onclick="toggleEditMode(\'' + w.id + '\', false)">취소</button><button type="button" class="btn-save-info" onclick="saveWineMeta(\'' + w.id + '\')">💾 수동 수정분 저장</button></div>';
         html += '      </div>';
         html += '    </div>';
 
@@ -680,7 +688,6 @@
       document.getElementById('tasteEdit_' + wineId).style.display = isEdit ? 'flex' : 'none';
     }
 
-    // 🥂 시음 완료 처리 및 나의 테이스팅 프로필 저장 (보관 중 -> 마신 와인 리스트로 이동)
     async function saveUserTasting(wineId) {
       const targetWine = allWines.find(x => String(x.id) === String(wineId));
       let notes = targetWine && typeof targetWine.tasting_notes === 'string'
@@ -715,9 +722,8 @@
       }
     }
 
-    // 🍾 마신 와인을 다시 셀러 보관 중으로 복구
     async function restoreToStored(wineId) {
-      if (!confirm('이 와인을 다시 [🍾 셀러 보관 중] 리스트로 되돌리시겠습니까? (작성한 시음 노트는 유지됩니다)')) return;
+      if (!confirm('이 와인을 다시 [🍾 셀러 보관 중] 리스트로 되돌리시겠습니까?')) return;
       const { error } = await sb.from('wines').update({
         is_stored: true,
         is_tasted: false
@@ -730,8 +736,13 @@
       }
     }
 
-    // 🪄 AI 상세스펙 + 6대 테이스팅 프로필(미네랄·피니쉬 포함) 자동 채우기
+    // 🪄 [원클릭 즉시 DB 저장] AI 상세스펙 + 6대 테이스팅 프로필(미네랄·피니쉬) 자동 채우기 및 즉시 저장
     async function autoFillSpecByName(wineId) {
+      const targetWine = allWines.find(x => String(x.id) === String(wineId));
+      let existingNotes = targetWine && typeof targetWine.tasting_notes === 'string'
+        ? JSON.parse(targetWine.tasting_notes || '{}')
+        : (targetWine && targetWine.tasting_notes ? { ...targetWine.tasting_notes } : {});
+
       const nameKo = document.getElementById('inp_name_ko_' + wineId).value.trim();
       const nameEn = document.getElementById('inp_name_en_' + wineId).value.trim();
       const vintage = document.getElementById('inp_vintage_' + wineId).value.trim();
@@ -744,11 +755,11 @@
 
       const btn = document.getElementById('btnAuto_' + wineId);
       const origText = btn.innerText;
-      btn.innerText = '⏳ AI 지식베이스 조회 중...';
+      btn.innerText = '⏳ AI 분석 및 DB 즉시 업데이트 중...';
       btn.disabled = true;
 
-      const prompt = `와인 명칭 "${targetName}" (빈티지: ${vintage || '미상'})에 대한 정확한 정보를 당신의 마스터 소믈리에 지식베이스로 완성해 순수 JSON으로만 응답하세요.
-특히 아로마와 6대 구조감(바디감, 타닌, 산도, 당도, 미네랄, 피니쉬 - 각 1~5점 정수)을 정확히 평가해 주세요.
+      const prompt = `와인 명칭 "${targetName}" (빈티지: ${vintage || '미상'})에 대한 정확한 정보를 당신의 마스터 소믈리에 지식베이스로 완성해 단일 JSON 객체({...})로만 응답하세요. 배열로 감싸지 마세요.
+특히 아로마와 6대 구조감(바디감, 타닌, 산도, 당도, 미네랄, 피니쉬 - 모두 1~5 사이의 정수)을 반드시 포함해 주세요.
 {
   "name_ko": "정식 한국어 명칭",
   "name_en": "정식 원어/영어 명칭",
@@ -760,7 +771,7 @@
   "drinking_window_start": 2026,
   "drinking_window_end": 2040,
   "tasting_notes": {
-    "aroma": ["대표아로마1", "대표아로마2", "대표아로마3", "대표아로마4"],
+    "aroma": ["체리", "가죽", "제비꽃", "미네랄"],
     "body": 4,
     "tannin": 4,
     "acidity": 4,
@@ -774,38 +785,114 @@
         const raw = await executeGeminiTextWithRetry(prompt, true, (att, maxAtt, sec) => {
           btn.innerText = `⏳ 서버 혼잡: ${sec}초 후 자동 재시도 (${att}/${maxAtt})...`;
         });
-        const parsed = JSON.parse(raw.replace(/```json/gi, '').replace(/```/g, '').trim());
+        const parsed = safeParseJson(raw);
+        const tn = parsed.tasting_notes || {};
 
-        if (parsed.name_ko) document.getElementById('inp_name_ko_' + wineId).value = parsed.name_ko;
-        if (parsed.name_en) document.getElementById('inp_name_en_' + wineId).value = parsed.name_en;
-        if (parsed.wine_type) document.getElementById('inp_type_' + wineId).value = parsed.wine_type;
-        if (parsed.country) document.getElementById('inp_country_' + wineId).value = parsed.country;
-        if (parsed.region) document.getElementById('inp_region_' + wineId).value = parsed.region;
-        if (parsed.producer) document.getElementById('inp_producer_' + wineId).value = parsed.producer;
-        if (Array.isArray(parsed.grape_varieties)) {
-          document.getElementById('inp_varieties_' + wineId).value = parsed.grape_varieties.join(', ');
-        }
-        if (parsed.drinking_window_start) document.getElementById('inp_dw_start_' + wineId).value = parsed.drinking_window_start;
-        if (parsed.drinking_window_end) document.getElementById('inp_dw_end_' + wineId).value = parsed.drinking_window_end;
+        const mergedNotes = {
+          ...existingNotes,
+          aroma: Array.isArray(tn.aroma) && tn.aroma.length > 0 ? tn.aroma : (existingNotes.aroma || []),
+          body: parseInt(tn.body) || existingNotes.body || 4,
+          tannin: parseInt(tn.tannin) || existingNotes.tannin || 4,
+          acidity: parseInt(tn.acidity) || existingNotes.acidity || 4,
+          sweetness: parseInt(tn.sweetness) || existingNotes.sweetness || 1,
+          mineral: parseInt(tn.mineral) || 4,
+          finish: parseInt(tn.finish) || 4
+        };
 
-        if (parsed.tasting_notes) {
-          const tn = parsed.tasting_notes;
-          if (Array.isArray(tn.aroma)) document.getElementById('inp_aroma_' + wineId).value = tn.aroma.join(', ');
-          if (tn.body) document.getElementById('inp_body_' + wineId).value = tn.body;
-          if (tn.tannin) document.getElementById('inp_tannin_' + wineId).value = tn.tannin;
-          if (tn.acidity) document.getElementById('inp_acidity_' + wineId).value = tn.acidity;
-          if (tn.sweetness !== undefined) document.getElementById('inp_sweetness_' + wineId).value = tn.sweetness;
-          if (tn.mineral) document.getElementById('inp_mineral_' + wineId).value = tn.mineral;
-          if (tn.finish) document.getElementById('inp_finish_' + wineId).value = tn.finish;
-        }
+        const updatePayload = {
+          name_ko: parsed.name_ko || nameKo || '이름 미지정',
+          name_en: parsed.name_en || nameEn || null,
+          wine_type: parsed.wine_type || document.getElementById('inp_type_' + wineId).value,
+          vintage: vintage ? parseInt(vintage) : null,
+          country: parsed.country || document.getElementById('inp_country_' + wineId).value.trim() || null,
+          region: parsed.region || document.getElementById('inp_region_' + wineId).value.trim() || null,
+          grape_varieties: Array.isArray(parsed.grape_varieties) ? parsed.grape_varieties : [],
+          producer: parsed.producer || document.getElementById('inp_producer_' + wineId).value.trim() || null,
+          drinking_window_start: parseInt(parsed.drinking_window_start) || null,
+          drinking_window_end: parseInt(parsed.drinking_window_end) || null,
+          tasting_notes: mergedNotes
+        };
 
-        alert('기본 스펙과 6대 테이스팅 프로필(미네랄·피니쉬 포함)이 입력란에 채워졌습니다. 확인 후 하단의 [💾 스펙 및 프로필 저장]을 눌러주세요!');
+        const { error } = await sb.from('wines').update(updatePayload).eq('id', wineId);
+        if (error) throw error;
+
+        alert(`✅ [${updatePayload.name_ko}]의 상세 스펙과 미네랄(${mergedNotes.mineral}점)·피니쉬(${mergedNotes.finish}점)가 DB에 즉시 업데이트되었습니다!`);
+        await fetchWines();
+        const reopenedCard = document.getElementById('card_' + wineId);
+        if (reopenedCard) reopenedCard.classList.add('active');
       } catch (err) {
-        alert('자동 채우기 실패: ' + err.message);
+        alert('자동 업데이트 실패: ' + err.message);
       } finally {
-        btn.innerText = origText;
-        btn.disabled = false;
+        if (btn) {
+          btn.innerText = origText;
+          btn.disabled = false;
+        }
       }
+    }
+
+    // 🪄 미네랄/피니쉬 점수가 0점(누락)인 기존 와인들을 찾아 일괄 업데이트
+    async function batchFillMissingProfiles() {
+      const missingList = (allWines || []).filter(w => {
+        if (!w) return false;
+        let notes = typeof w.tasting_notes === 'string' ? JSON.parse(w.tasting_notes || '{}') : (w.tasting_notes || {});
+        return !notes.mineral || !notes.finish;
+      });
+
+      if (missingList.length === 0) {
+        alert('모든 와인에 이미 미네랄 및 피니쉬 점수가 등록되어 있습니다!');
+        return;
+      }
+
+      if (!confirm(`미네랄/피니쉬 점수가 비어 있는 ${missingList.length}병의 와인을 AI로 일괄 업데이트하시겠습니까?`)) return;
+
+      const btn = document.getElementById('batchUpdateBtn');
+      const origText = btn.innerText;
+      btn.disabled = true;
+
+      let successCnt = 0;
+      for (let i = 0; i < missingList.length; i++) {
+        const w = missingList[i];
+        const targetName = ((w.name_ko || '') + ' ' + (w.name_en || '')).trim();
+        btn.innerText = `⏳ 일괄 업데이트 중 (${i + 1}/${missingList.length})...`;
+
+        const prompt = `와인 "${targetName}" (빈티지: ${w.vintage || 'NV'})의 6대 테이스팅 프로필과 아로마를 단일 JSON 객체로 응답하세요:
+{
+  "aroma": ["아로마1", "아로마2", "아로마3"],
+  "body": 4,
+  "tannin": 4,
+  "acidity": 4,
+  "sweetness": 1,
+  "mineral": 4,
+  "finish": 4
+}`;
+
+        try {
+          const raw = await executeGeminiTextWithRetry(prompt, true);
+          const tn = safeParseJson(raw);
+          let existingNotes = typeof w.tasting_notes === 'string' ? JSON.parse(w.tasting_notes || '{}') : (w.tasting_notes || {});
+
+          const updatedNotes = {
+            ...existingNotes,
+            aroma: Array.isArray(tn.aroma) && tn.aroma.length > 0 ? tn.aroma : (existingNotes.aroma || []),
+            body: parseInt(tn.body) || existingNotes.body || 4,
+            tannin: parseInt(tn.tannin) || existingNotes.tannin || 4,
+            acidity: parseInt(tn.acidity) || existingNotes.acidity || 4,
+            sweetness: parseInt(tn.sweetness) || existingNotes.sweetness || 1,
+            mineral: parseInt(tn.mineral) || 4,
+            finish: parseInt(tn.finish) || 4
+          };
+
+          const { error } = await sb.from('wines').update({ tasting_notes: updatedNotes }).eq('id', w.id);
+          if (!error) successCnt++;
+        } catch (e) {
+          console.error('Batch item error:', e);
+        }
+      }
+
+      btn.disabled = false;
+      btn.innerText = origText;
+      alert(`✅ 총 ${missingList.length}병 중 ${successCnt}병의 미네랄/피니쉬 프로필 업데이트가 완료되었습니다!`);
+      fetchWines();
     }
 
     async function saveWineMeta(wineId) {
@@ -859,7 +946,12 @@
       }).eq('id', wineId);
 
       if (error) alert('저장 실패: ' + error.message);
-      else { alert('스펙 및 테이스팅 프로필이 저장되었습니다.'); fetchWines(); }
+      else {
+        alert('스펙 및 테이스팅 프로필이 저장되었습니다.');
+        await fetchWines();
+        const reopenedCard = document.getElementById('card_' + wineId);
+        if (reopenedCard) reopenedCard.classList.add('active');
+      }
     }
 
     async function handleSingleFile(wineId, file) {
@@ -894,7 +986,6 @@
       document.getElementById('sommQuery').value = txt;
     }
 
-    // 🤖 내 셀러 '보관 중'인 와인만 필터링하여 AI 소믈리에 추천
     async function askSommelier() {
       const q = document.getElementById('sommQuery').value.trim();
       if (!q) { alert('질문이나 추천받고 싶은 상황을 입력해 주세요.'); return; }
@@ -1120,7 +1211,7 @@ ${inventoryList}
 라벨에 품종이나 국가가 직접 적혀있지 않더라도, 식별된 와인의 정식 규격(DOCG/AOC/AVA 등)과 생산자 정보를 기반으로 정확한 국가, 지역, 대표 품종, 와인 타입, 6대 테이스팅 프로필(바디, 타닌, 산도, 당도, 미네랄, 피니쉬)을 채워넣으세요.
 빈티지는 라벨에 적힌 연도(4자리 숫자)를 최우선으로 읽고, 숫자가 보이지 않으면 null로 하세요.
 
-반드시 아래 JSON 형식으로만 응답하세요:
+반드시 단일 JSON 객체로만 응답하세요:
 {
   "name_ko": "한국에서 통용되는 정식 한국어 와인명 (예: 발디카바 브루넬로 디 몬탈치노)",
   "name_en": "원어/영어 공식 명칭 (예: Valdicava Brunello di Montalcino)",
@@ -1152,8 +1243,7 @@ ${inventoryList}
             status.innerHTML = logHtml + '⏳ [' + (i + 1) + '/' + total + '] 서버 대기: ' + sec + '초 후 재시도 (' + att + '/' + maxAtt + ')...';
           });
 
-          const cleanJson = rawResult.replace(/```json/gi, '').replace(/```/g, '').trim();
-          const parsedData = JSON.parse(cleanJson);
+          const parsedData = safeParseJson(rawResult);
 
           const dbRecord = {
             ...parsedData,
