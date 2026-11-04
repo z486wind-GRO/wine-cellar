@@ -573,7 +573,7 @@
         html += '      <tr><td class="k">🏭 생산자</td><td>' + (w.producer || '-') + '</td></tr>';
         html += '      <tr><td class="k">⏳ 시음적기</td><td><b>' + (w.drinking_window_start || '?') + '년 ~ ' + (w.drinking_window_end || '?') + '년</b></td></tr>';
         if (scoreChipsHtml) {
-          html += '      <tr><td class="k">🏆 평점</td><td><b>' + scoreObjToString(expScores) + '</b></td></tr>';
+          html += '      <tr><td class="k">🏆 평점</td><td><b>' + scoresObjToString(expScores) + '</b></td></tr>';
         }
         html += '    </table>';
 
@@ -647,7 +647,7 @@
         html += '        <tr><td class="lbl">등록 일자</td><td><b>' + regDateStr + '</b></td></tr>';
         html += '        <tr><td class="lbl">타입</td><td><b>' + typeInfo.label + '</b></td></tr>';
         html += '        <tr><td class="lbl">빈티지</td><td><b>' + (w.vintage || 'NV (미지정)') + '</b></td></tr>';
-        html += '        <tr><td class="lbl">평점 (RP/WS/JP/Vivino)</td><td><b>' + (scoreObjToString(expScores) || '-') + '</b></td></tr>';
+        html += '        <tr><td class="lbl">평점 (RP/WS/JP/Vivino)</td><td><b>' + (scoresObjToString(expScores) || '-') + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매 가격</td><td><b>' + curPriceText + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매처</td><td>' + (w.purchase_place || '-') + '</td></tr>';
         html += '        <tr><td class="lbl">메모</td><td>' + (w.notes || '-') + '</td></tr>';
@@ -774,7 +774,6 @@
       }
     }
 
-    // 🪄 [원클릭 즉시 DB 저장] AI 상세스펙 + RP/WS/JP/Vivino 평점 채우기
     async function autoFillSpecByName(wineId) {
       const targetWine = allWines.find(x => String(x.id) === String(wineId));
       let existingNotes = targetWine && typeof targetWine.tasting_notes === 'string'
@@ -856,7 +855,7 @@
         const { error } = await sb.from('wines').update(updatePayload).eq('id', wineId);
         if (error) throw error;
 
-        alert(`✅ [${updatePayload.name_ko}]의 상세 스펙과 평점(RP, WS, JP, Vivino)이 DB에 즉시 업데이트되었습니다!`);
+        alert(`✅ [${updatePayload.name_ko}]의 상세 스펙과 평점이 DB에 즉시 업데이트되었습니다!`);
         await fetchWines();
         const reopenedCard = document.getElementById('card_' + wineId);
         if (reopenedCard) reopenedCard.classList.add('active');
@@ -996,8 +995,8 @@ ${inventoryList}
 
 위 [셀러 보관 와인 리스트]에 있는 와인 중에서만 사용자의 요청에 가장 잘 부합하는 와인 1~3병을 엄선하여 추천해 주세요.
 각 추천 와인에 대해:
-1. 추천 와인명과 빈티지 (보유한 평점 언급)
-2. 추천 이유 (RP, WS, Vivino 등 평점 및 미네랄/피니쉬 등 프로필 기반)
+1. 추천 와인명과 빈티지
+2. 추천 이유 (평점 및 프로필 기반)
 3. 권장 서빙 온도 및 브리딩/칠링 팁
 을 깔끔하고 읽기 편하게 정리해 주세요.`;
 
