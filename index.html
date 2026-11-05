@@ -534,7 +534,6 @@
         for (let k in expScores) {
           scoreChipsHtml += `<span class="score-chip">🏆 ${k} ${expScores[k]}</span>`;
         }
-        let scoreStrInput = scoresObjToString(expScores);
 
         let notes = typeof w.tasting_notes === 'string' ? JSON.parse(w.tasting_notes || '{}') : (w.tasting_notes || {});
         let aromas = Array.isArray(notes.aroma) ? notes.aroma : [];
@@ -572,9 +571,6 @@
         html += '      <tr><td class="k">🍇 품종</td><td>' + varieties + '</td></tr>';
         html += '      <tr><td class="k">🏭 생산자</td><td>' + (w.producer || '-') + '</td></tr>';
         html += '      <tr><td class="k">⏳ 시음적기</td><td><b>' + (w.drinking_window_start || '?') + '년 ~ ' + (w.drinking_window_end || '?') + '년</b></td></tr>';
-        if (scoreChipsHtml) {
-          html += '      <tr><td class="k">🏆 평점</td><td><b>' + scoresObjToString(expScores) + '</b></td></tr>';
-        }
         html += '    </table>';
 
         html += '    <div class="note-box">';
