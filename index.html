@@ -534,6 +534,7 @@
         for (let k in expScores) {
           scoreChipsHtml += `<span class="score-chip">🏆 ${k} ${expScores[k]}</span>`;
         }
+        let scoreStrInput = scoresObjToString(expScores);
 
         let notes = typeof w.tasting_notes === 'string' ? JSON.parse(w.tasting_notes || '{}') : (w.tasting_notes || {});
         let aromas = Array.isArray(notes.aroma) ? notes.aroma : [];
