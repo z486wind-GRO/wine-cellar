@@ -238,7 +238,7 @@
     <!-- 3. 새 라벨 등록 섹션 -->
     <div id="tabUploadSection" style="text-align: center;">
       <h3 style="margin-bottom: 6px; font-size: 18px;">와인/주류 라벨 추가</h3>
-      <p style="font-size: 13px; color: #6c757d; margin-bottom: 14px;">라벨 사진을 올리면 AI가 와인 지식베이스를 결합해 상세 스펙, 평점(RP, WS, JP, Vivino), 테이스팅 프로필을 자동 완성합니다.</p>
+      <p style="font-size: 13px; color: #6c757d; margin-bottom: 14px;">라벨 사진을 올리면 AI가 와인 지식베이스를 결합해 상세 스펙, 평점(RP, WS, JS, Vivino), 테이스팅 프로필을 자동 완성합니다.</p>
       <input type="file" id="directAlbumIn" accept="image/jpeg, image/png, image/webp" multiple style="display:none;" onchange="handleIncomingFiles(this.files)">
       <label for="directAlbumIn" class="btn-direct-label btn-album">🖼️ 갤러리에서 사진 선택</label>
       <input type="file" id="directCamIn" accept="image/jpeg, image/png" capture="camera" style="display:none;" onchange="handleIncomingFiles(this.files)">
@@ -524,7 +524,7 @@
         const hasValidImg = w.image_url && w.image_url.startsWith('data:image');
         
         const thumbHtml = hasValidImg ? '<img src="' + w.image_url + '" class="wine-thumb" alt="label" onclick="openImageModal(\'' + w.image_url + '\', event)">' : '<div class="wine-thumb-placeholder">🍷</div>';
-        const detailImgHtml = hasValidImg ? '<div class="detail-img-box" onclick="openImageModal(\'' + w.image_url + '\', event)"><img src="' + w.image_url + '" class="detail-large-img" alt="label"><div class="zoom-hint">🔍 터치하여 크게 보기</div></div>' : '';
+        const detailImgHtml = hasValidImg ? '<div class="detail-img-box" onclick="openImageModal(\'' + w.image_url + '\', event)"><img src="' + w.image_url + '" class="detail-large-img" alt="label"><div class="zoom-hint">🔍 터치하여 크게 보기</div></div>' : '<div style="font-size:12px; color:#868e96; margin-bottom:10px; text-align:center;">📷 등록된 라벨 사진이 없습니다 (아래 [사진 변경]으로 추가 가능)</div>';
         
         const curPriceText = formatPrice(w.purchase_price);
         let varieties = Array.isArray(w.grape_varieties) ? w.grape_varieties.join(', ') : (w.grape_varieties || '-');
@@ -647,13 +647,13 @@
         html += '        <tr><td class="lbl">등록 일자</td><td><b>' + regDateStr + '</b></td></tr>';
         html += '        <tr><td class="lbl">타입</td><td><b>' + typeInfo.label + '</b></td></tr>';
         html += '        <tr><td class="lbl">빈티지</td><td><b>' + (w.vintage || 'NV (미지정)') + '</b></td></tr>';
-        html += '        <tr><td class="lbl">평점 (RP/WS/JP/Vivino)</td><td><b>' + (scoresObjToString(expScores) || '-') + '</b></td></tr>';
+        html += '        <tr><td class="lbl">평점 (RP/JS/WS/Vivino)</td><td><b>' + (scoresObjToString(expScores) || '-') + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매 가격</td><td><b>' + curPriceText + '</b></td></tr>';
         html += '        <tr><td class="lbl">구매처</td><td>' + (w.purchase_place || '-') + '</td></tr>';
         html += '        <tr><td class="lbl">메모</td><td>' + (w.notes || '-') + '</td></tr>';
         html += '      </table>';
         html += '      <div class="info-edit-form" id="editBox_' + w.id + '">';
-        html += '        <button type="button" class="btn-ai-autofill" id="btnAuto_' + w.id + '" onclick="autoFillSpecByName(\'' + w.id + '\')">🪄 AI로 상세스펙 + 평점(RP,WS,JP,Vivino) 채우고 즉시 DB 저장</button>';
+        html += '        <button type="button" class="btn-ai-autofill" id="btnAuto_' + w.id + '" onclick="autoFillSpecByName(\'' + w.id + '\')">🪄 AI로 상세스펙 + 평점(RP,JS,WS,Vivino) 채우고 즉시 DB 저장</button>';
         html += '        <div class="info-input-row">';
         html += '          <div class="info-field"><label>한국어 이름</label><input type="text" id="inp_name_ko_' + w.id + '" value="' + (w.name_ko || '') + '"></div>';
         html += '          <div class="info-field"><label>원어/영어 이름</label><input type="text" id="inp_name_en_' + w.id + '" value="' + (w.name_en || '') + '"></div>';
@@ -678,7 +678,7 @@
         html += '          <div class="info-field"><label>품종 (쉼표 구분)</label><input type="text" id="inp_varieties_' + w.id + '" value="' + (varieties === '-' ? '' : varieties) + '"></div>';
         html += '          <div class="info-field"><label>생산자</label><input type="text" id="inp_producer_' + w.id + '" value="' + (w.producer || '') + '"></div>';
         html += '        </div>';
-        html += '        <div class="info-field"><label>전문가 및 비비노 평점 (예: RP 98, WS 94, JP 96, Vivino 4.6)</label><input type="text" id="inp_scores_' + w.id + '" value="' + scoreStrInput + '" placeholder="예: RP 98, WS 94, Vivino 4.5"></div>';
+        html += '        <div class="info-field"><label>전문가 및 비비노 평점 (예: RP 98, JS 95, WS 94, Vivino 4.6)</label><input type="text" id="inp_scores_' + w.id + '" value="' + scoreStrInput + '" placeholder="예: RP 98, JS 95, Vivino 4.5"></div>';
         html += '        <div class="info-input-row">';
         html += '          <div class="info-field"><label>시음적기 시작(년)</label><input type="number" id="inp_dw_start_' + w.id + '" value="' + (w.drinking_window_start || '') + '"></div>';
         html += '          <div class="info-field"><label>시음적기 종료(년)</label><input type="number" id="inp_dw_end_' + w.id + '" value="' + (w.drinking_window_end || '') + '"></div>';
@@ -707,7 +707,7 @@
 
         html += '    <div class="card-actions">';
         html += '      <input type="file" id="cardFile_' + w.id + '" accept="image/jpeg, image/png, image/webp" style="display:none;" onchange="handleSingleFile(\'' + w.id + '\', this.files[0])">';
-        html += '      <label for="cardFile_' + w.id + '" class="btn-photo-label">📷 사진 변경</label>';
+        html += '      <label for="cardFile_' + w.id + '" class="btn-photo-label">📷 사진 변경/등록</label>';
         html += '      <button type="button" class="btn-delete" onclick="deleteWine(\'' + w.id + '\', \'' + (w.name_ko || w.name_en || '').replace(/'/g, "\\'") + '\')">🗑️ 삭제</button>';
         html += '    </div>';
         html += '  </div>';
@@ -796,7 +796,7 @@
       btn.disabled = true;
 
       const prompt = `와인 명칭 "${targetName}" (빈티지: ${vintage || '미상'})에 대한 정확한 정보를 마스터 소믈리에 지식으로 완성해 단일 JSON 객체로만 응답하세요.
-전문가 평점(RP=Robert Parker, WS=Wine Spectator, JP=James Suckling, Vivino=비비노 평점 등)이 있다면 expert_scores 객체에 키-밸류 형태로 담아주세요 (예: {"RP": "98", "WS": "94", "JP": "96", "Vivino": "4.5"}). 확실치 않으면 빈 객체 {}를 넣으세요.
+전문가 평점(RP=Robert Parker, JS=James Suckling, WS=Wine Spectator, Vivino=비비노 평점 등)이 있다면 expert_scores 객체에 키-밸류 형태로 담아주세요 (예: {"RP": "98", "JS": "96", "WS": "94", "Vivino": "4.5"}). 확실치 않으면 빈 객체 {}를 넣으세요.
 {
   "name_ko": "정식 한국어 명칭",
   "name_en": "정식 원어/영어 명칭",
@@ -805,7 +805,7 @@
   "region": "세부 지역",
   "producer": "생산자",
   "grape_varieties": ["대표 품종"],
-  "expert_scores": {"RP": "95", "Vivino": "4.4"},
+  "expert_scores": {"RP": "95", "JS": "95", "Vivino": "4.4"},
   "drinking_window_start": 2026,
   "drinking_window_end": 2040,
   "tasting_notes": {
@@ -935,7 +935,7 @@
       const img = await resizeImage(file);
       const { error } = await sb.from('wines').update({ image_url: img.dataUrl }).eq('id', wineId);
       if (error) alert('오류: ' + error.message);
-      else { alert('사진이 변경되었습니다.'); fetchWines(); }
+      else { alert('사진이 등록되었습니다.'); fetchWines(); }
     }
 
     async function deleteWine(wineId, wineName) {
@@ -1185,7 +1185,7 @@ ${inventoryList}
 
       const prompt = `당신은 최고 수준의 와인 전문가(Master Sommelier)입니다.
 업로드된 라벨 사진을 인식하여 어떤 와인인지 식별한 후, 지식베이스를 동원해 세부 스펙을 완성하세요.
-전문가 평점(RP=Robert Parker, WS=Wine Spectator, JP=James Suckling, Vivino=비비노 평점)이 있다면 expert_scores 객체에 담아주세요 (예: {"RP": "98", "WS": "94", "JP": "96", "Vivino": "4.5"}).
+전문가 평점(RP=Robert Parker, JS=James Suckling, WS=Wine Spectator, Vivino=비비노 평점)이 있다면 expert_scores 객체에 키-밸류 형태로 담아주세요 (예: {"RP": "98", "JS": "96", "WS": "94", "Vivino": "4.5"}).
 
 반드시 단일 JSON 객체로만 응답하세요:
 {
@@ -1197,7 +1197,7 @@ ${inventoryList}
   "producer": "생산자명",
   "grape_varieties": ["대표 품종"],
   "vintage": 2020 또는 null,
-  "expert_scores": {"RP": "95", "Vivino": "4.4"},
+  "expert_scores": {"RP": "95", "JS": "95", "Vivino": "4.4"},
   "drinking_window_start": 2026,
   "drinking_window_end": 2045,
   "tasting_notes": {
@@ -1224,7 +1224,7 @@ ${inventoryList}
 
           const dbRecord = {
             ...parsedData,
-            image_url: item.dataUrl,
+            image_url: item.dataUrl || null,
             is_stored: true,
             is_tasted: false,
             status: 'confirmed'
